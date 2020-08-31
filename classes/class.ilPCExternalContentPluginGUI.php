@@ -162,7 +162,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 		switch ($this->getObjGui()->object->typedef->getLaunchType())
 		{
 			case ilExternalContentType::LAUNCH_TYPE_LINK:
-				$this->object->trackAccess();
+				$this->getObjGui()->object->trackAccess();
 				return $this->getObjGui()->object->getLaunchLink();
 			case ilExternalContentType::LAUNCH_TYPE_PAGE:
 				return $this->getObjGui()->object->getPageCode();
