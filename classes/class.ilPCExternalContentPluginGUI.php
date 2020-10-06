@@ -19,6 +19,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 {
 
 	var $obj_gui;
+	var $template;
 
 	/**
 	 * Execute command
@@ -163,7 +164,8 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 		{
 			case ilExternalContentType::LAUNCH_TYPE_LINK:
 				$this->getObjGui()->object->trackAccess();
-				return $this->getObjGui()->object->getLaunchLink();
+				$this->getObjGui()->object->getLaunchLink();
+				return $this->getLaunchLink($this->getObjGui()->object->getLaunchLink());
 			case ilExternalContentType::LAUNCH_TYPE_PAGE:
 				return $this->getObjGui()->object->getPageCode();
 			case ilExternalContentType::LAUNCH_TYPE_EMBED:
@@ -299,6 +301,35 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 				break;
 		}
 
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getTemplate()
+	{
+		return $this->template;
+	}
+
+	/**
+	 * @param mixed $template
+	 */
+	public function setTemplate($template)
+	{
+		$this->template = $template;
+	}
+
+	public function getLaunchLink($a_link_url){
+		$toolbar = new ilToolbarGUI();
+		$toolbar->setFormAction($a_link_url);
+
+		$link = ilSubmitButton::getInstance();
+		$link->setCaption($this->getObjGui()->getTitle(), FALSE);
+		$toolbar->addButtonInstance($link);
+
+		$toolbar->setFormName($this->lng->txt("Link_form_name"));
+
+		return $toolbar->getHTML();
 	}
 
 
