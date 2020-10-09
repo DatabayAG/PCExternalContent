@@ -7,5 +7,5 @@
 //
 
 <!-- language file start -->
-cmd_insert#:#Externes Video/Tool hinzufügen
-external_content#:#Externes Video/Tool
+cmd_insert#:#Add External Video/Tool
+external_content#:#External Video/Tool

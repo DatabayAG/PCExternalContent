@@ -179,8 +179,8 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 				}
 				if($a_mode == "edit"){
 					$tpl = $this->getPlugin()->getTemplate("tpl.content.html");
-					$tpl->setVariable("MESSAGE",$this->getPlugin()->txt("edit_mode_for_embedded"));
-					$tpl->setVariable("IFRAME",$this->getObjGui()->object->getEmbedCode());
+					$tpl->setVariable("MESSAGE",$this->getPlugin()->txt("external_content"));
+					$tpl->setVariable("CONTENT",$this->getObjGui()->object->getEmbedCode());
 					return $tpl->get();
 				}else{
 					return $this->getObjGui()->object->getEmbedCode();
@@ -202,7 +202,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 
 		$pl = $this->getPlugin();
 
-		$ilTabs->addTab("edit", $pl->txt("settings"), $ilCtrl->getLinkTarget($this, "edit"));
+		$ilTabs->addTab("edit", $pl->txt("external_content"), $ilCtrl->getLinkTarget($this, "edit"));
 
 		$ilTabs->activateTab($a_active);
 	}
