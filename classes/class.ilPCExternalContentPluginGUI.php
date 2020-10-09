@@ -177,7 +177,14 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 				{
 					ilUtil::sendFailure(ilUtil::stripSlashes($_GET['lti_errormsg']), true);
 				}
-				return $this->getObjGui()->object->getEmbedCode();
+				if($a_mode == "edit"){
+					$tpl = $this->getPlugin()->getTemplate("tpl.content.html");
+					$tpl->setVariable("MESSAGE",$this->getPlugin()->txt("edit_mode_for_embedded"));
+					$tpl->setVariable("IFRAME",$this->getObjGui()->object->getEmbedCode());
+					return $tpl->get();
+				}else{
+					return $this->getObjGui()->object->getEmbedCode();
+				}
 			default:
 				break;
 		}
@@ -331,7 +338,6 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 
 		return $toolbar->getHTML();
 	}
-
 
 
 }
