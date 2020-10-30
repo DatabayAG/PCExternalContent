@@ -78,5 +78,14 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 			'settings_id' => array('integer', $a_properties['settings_id'])
 		));
 	}
+
+	/**
+	 * This function is called when the page content is cloned
+	 * @param array 	$a_properties		(properties saved in the page, should be modified if neccessary)
+	 * @param string	$a_plugin_version	(plugin version of the properties)
+	 */
+	public function onClone(&$a_properties, $a_plugin_version)
+	{
+	}
 }
 
