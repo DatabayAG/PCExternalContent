@@ -87,5 +87,14 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 	public function onClone(&$a_properties, $a_plugin_version)
 	{
 	}
+
+	/**
+	 * This function is called before the page content is deleted
+	 * @param array 	$a_properties		properties saved in the page (will be deleted afterwards)
+	 * @param string	$a_plugin_version	plugin version of the properties
+	 */
+	public function onDelete($a_properties, $a_plugin_version)
+	{
+	}
 }
 

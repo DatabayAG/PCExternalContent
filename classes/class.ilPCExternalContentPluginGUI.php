@@ -340,6 +340,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	}
 
 
+
 }
 
 ?>
