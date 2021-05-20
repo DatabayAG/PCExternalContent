@@ -1,10 +1,10 @@
 <?php
 /**
- * Copyright (c) 2020 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
+ * Copyright (c) 2021 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
  * GPLv3, see docs/LICENSE
  *
- * @author Jesus Copado <jesus.copado@fau.de>
- * @version $Id$
+ * @author Fred Neumann <fred.neumann@fau.de>
+ * @author Cornel Musielak <cornel.musielak@fau.de>
  */
 
 // alphanumerical ID of the plugin; never change this
@@ -19,8 +19,8 @@ $ilias_min_version = "5.4.0";
 $ilias_max_version = "5.4.999";
 
 // optional, but useful: Add one or more responsible persons and a contact email
-$responsible = "Jesus Copado";
-$responsible_mail = "jesus.copado@fau.de";
+$responsible = "Fred Neumann; Cornel Musielak";
+$responsible_mail = "fred.neumann@fau.de; cornel.musielak@fau.de";
 
 // this plugin has an own exporter class
 $supports_export = true;

@@ -1,153 +1,201 @@
 <?php
 /**
- * Copyright (c) 2020 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
+ * Copyright (c) 2021 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
  * GPLv3, see docs/LICENSE
+ *
+ * @author Fred Neumann <fred.neumann@fau.de>
+ * @author Cornel Musielak <cornel.musielak@fau.de>
  */
 
-include_once("./Services/COPage/classes/class.ilPageComponentPluginGUI.php");
+require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
 
 /**
- * Page Component External Content plugin GUI
- *
- * @author Jesus Copado <jesus.copado@fau.de>
- * @version $Id$
+ * External Content Page Component GUI
  *
  * @ilCtrl_isCalledBy ilPCExternalContentPluginGUI: ilPCPluggedGUI
- * @ilCtrl_Calls ilPCExternalContentPluginGUI: ilPropertyFormGUI, ilExternalContentType, ilObjExternalContentGUI
+ * @ilCtrl_isCalledBy ilPCExternalContentPluginGUI: ilUIPluginRouterGUI
  */
 class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 {
+	/** @var  ilCtrl $ctrl */
+	protected $ctrl;
 
-	var $obj_gui;
-	var $template;
+	/** @var  ilTemplate $tpl */
+	protected $tpl;
+
+	/** @var ilPCExternalContentPlugin */
+	protected $plugin;
+
+	/**
+	 * ilPCExternalContentPluginGUI constructor.
+	 */
+	public function __construct()
+	{
+		global $DIC;
+        $this->ctrl = $DIC->ctrl();
+        $this->tpl = $DIC->ui()->mainTemplate();
+
+		parent::__construct();
+	}
+
 
 	/**
 	 * Execute command
-	 *
-	 * @param
-	 * @return
 	 */
 	public function executeCommand()
 	{
-		global $ilCtrl;
-
-		$next_class = $ilCtrl->getNextClass();
-
-		switch ($next_class) {
+		$next_class = $this->ctrl->getNextClass();
+		switch($next_class)
+		{
 			default:
 				// perform valid commands
-				$cmd = $ilCtrl->getCmd();
-				if (in_array($cmd, array("create", "save", "edit", "update", "cancel"))) {
+				$cmd = $this->ctrl->getCmd();
+				if (in_array($cmd, array("create", "save", "edit", "update", "cancel", "downloadFile")))
+				{
 					$this->$cmd();
 				}
 				break;
 		}
 	}
-
-
+	
+	
 	/**
 	 * Create
-	 *
-	 * @param
-	 * @return
 	 */
 	public function insert()
 	{
-		global $tpl;
-
-		$this->setTabs("edit");
-		$form = $this->initForm("create");
-		$tpl->setContent($form->getHTML());
+		$form = $this->initForm(true);
+		$this->tpl->setContent($form->getHTML());
 	}
-
+	
 	/**
-	 * Edit
-	 *
-	 * @param
-	 * @return
-	 */
-	public function edit()
-	{
-		global $tpl;
-
-		$this->setTabs("edit");
-		$form = $this->initForm("edit");
-		$tpl->setContent($form->getHTML());
-	}
-
-	/**
-	 * Save new pc input
+	 * Save new pc example element
 	 */
 	public function create()
 	{
-		global $tpl, $lng;
-
 		$form = $this->initForm(true);
-		if ($form->checkInput()) {
-			$properties = array('title' => $form->getInput('title'), 'description' => $form->getInput('description'), 'type_id' => $form->getInput('type_id'), 'settings_id' => $form->getInput('settings_id'), 'obj_id' => (int) $_GET['obj_id']);
-			if ($this->createElement($properties)) {
-
-				ilPCExternalContentPlugin::createInDB($properties);
-
-				ilUtil::sendSuccess($lng->txt("msg_obj_modified"), true);
-				$this->returnToParent();
-			}
+		if ($this->saveForm($form, true))
+		{
+			ilUtil::sendSuccess($this->lng->txt("msg_obj_modified"), true);
+			$this->returnToParent();
 		}
 		$form->setValuesByPost();
-		$tpl->setContent($form->getHtml());
+		$this->tpl->setContent($form->getHtml());
+	}
+	
+	/**
+	 * Init the properties form and load the stored values
+	 */
+	public function edit()
+	{
+        $form = $this->initForm();
+
+
+		$this->tpl->setContent($form->getHTML());
+	}
+	
+	/**
+	 * Update
+	 */
+	public function update()
+	{
+		$form = $this->initForm(false);
+		if ($this->saveForm($form, false))
+		{
+			ilUtil::sendSuccess($this->lng->txt("msg_obj_modified"), true);
+			$this->returnToParent();
+		}
+		$form->setValuesByPost();
+		$this->tpl->setContent($form->getHtml());
 	}
 
+
 	/**
-	 * Init editing form, Uses the Obj Plugin function
-	 *
-	 * @param int $a_mode Edit Mode
+	 * Init creation editing form
+	 * @param  bool        $a_create        true: create component, false: edit component
 	 */
-	protected function initForm($a_mode)
+	protected function initForm($a_create = false)
 	{
-		global $ilCtrl, $lng;
+		$form = new ilPropertyFormGUI();
 
-		//Ensure the gui class has been initialized
-		if(!is_a($this->getObjGui(),'ilObjExternalContentGUI')){
-			$this->initObjGUI("form");
-		}
-
-		//Get the extra properties
-		$properties = $this->getProperties();
-		$type = new ilExternalContentType($this->getObjGui()->object->getTypeId());
-		foreach($type->getInputFields() as $field){
-			if(isset($_POST["field_".$field->field_name])){
-				$properties["field_".$field->field_name] = $_POST["field_".$field->field_name];
-			}
-		}
-
-		//Set as local properties to work easier with them
-		$this->setProperties($properties);
-
-		//Get the form from the RepObjGUI
-		if (empty($this->getProperties())) {
-			$this->getObjGui()->initForm("create", $this->getProperties(), TRUE);
-		} else {
-			$this->getObjGui()->initForm("edit", $this->getProperties(), TRUE);
-		}
-
-		$form = $this->getObjGui()->getForm();
-
-		//Add Save and Cancel command from here.
-		if ($a_mode == "create")
+		// save and cancel commands
+		if ($a_create)
 		{
-			$form->addCommandButton("create", $lng->txt("create"));
-			$form->addCommandButton("cancel", $lng->txt("cancel"));
-		} else
-		{
-			$form->addCommandButton("update", $lng->txt("save"));
-			$form->addCommandButton("cancel", $lng->txt("cancel"));
+		    // TODO: add here the selection of the type
+            /** @see \ilObjExternalContentGUI::initForm() */
+
+			$this->addCreationButton($form);
+			$form->addCommandButton("cancel", $this->lng->txt("cancel"));
+			$form->setTitle($this->plugin->getPluginName());
 		}
+		else
+		{
+		    // TODO: add here the form elements for title, description and the type
+            // TODO: leave out 'online' checkbox
+            // TODO: add the type specific form elements
+            /** @see \ilObjExternalContentGUI::initForm() */
 
-		$form->setFormAction($ilCtrl->getFormAction($this));
-
+			$form->addCommandButton("update", $this->lng->txt("save"));
+			$form->addCommandButton("cancel", $this->lng->txt("cancel"));
+			$form->setTitle($this->plugin->getPluginName());
+		}
+		
+		$form->setFormAction($this->ctrl->getFormAction($this));
 		return $form;
 	}
 
+    /**
+     * Load the form values for editing
+     * @param ilPropertyFormGUI $form
+     */
+	protected function loadForm($form)
+    {
+        $properties = $this->getProperties();
+	    // TODO: get title and description from the properties
+        // TODO: get an ilExternalContentSettings object from the id in the properties
+        // TODO: get the input values from the settings
+        /** @see ilObjExternalContentGUI::loadFormValues() */
+    }
+
+    /**
+     * Save the form values
+     * @param ilPropertyFormGUI $form
+     * @param bool $a_create
+     * @return bool success
+     */
+	protected function saveForm($form, $a_create)
+	{
+		if ($form->checkInput())
+		{
+			$properties = $this->getProperties();
+
+            // TODO: set the title and description directly from the form in the properties
+            // TODO: get an ilExternalContentSettings object from the id in the properties (create and save it if the id is empty)
+            // TODO: save the form input into the settings
+            /** @see ilObjExternalContentGUI::saveFormValues() */
+
+
+			if ($a_create)
+			{
+				return $this->createElement($properties);
+			}
+			else
+			{
+				return $this->updateElement($properties);
+			}
+		}
+
+		return false;
+	}
+
+
+	/**
+	 * Cancel
+	 */
+	public function cancel()
+	{
+		$this->returnToParent();
+	}
 
 
 	/**
@@ -158,189 +206,32 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	 */
 	public function getElementHTML($a_mode, array $a_properties, $a_plugin_version)
 	{
-		$this->initObjGUI("view", $a_properties);
+	    require_once (__DIR__ . '/class.PCExternalContent.php');
+        require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentRenderer.php');
 
-		switch ($this->getObjGui()->object->typedef->getLaunchType())
-		{
-			case ilExternalContentType::LAUNCH_TYPE_LINK:
-				$this->getObjGui()->object->trackAccess();
-				$this->getObjGui()->object->getLaunchLink();
-				return $this->getLaunchLink($this->getObjGui()->object->getLaunchLink());
-			case ilExternalContentType::LAUNCH_TYPE_PAGE:
-				return $this->getObjGui()->object->getPageCode();
-			case ilExternalContentType::LAUNCH_TYPE_EMBED:
-				if ($_GET['lti_msg'])
-				{
-					ilUtil::sendInfo(ilUtil::stripSlashes($_GET['lti_msg']), true);
-				}
-				if ($_GET['lti_errormsg'])
-				{
-					ilUtil::sendFailure(ilUtil::stripSlashes($_GET['lti_errormsg']), true);
-				}
-				if($a_mode == "edit"){
-					$tpl = $this->getPlugin()->getTemplate("tpl.content.html");
-					$tpl->setVariable("MESSAGE",$this->getPlugin()->txt("external_content"));
-					$tpl->setVariable("CONTENT",$this->getObjGui()->object->getEmbedCode());
-					return $tpl->get();
-				}else{
-					return $this->getObjGui()->object->getEmbedCode();
-				}
-			default:
-				break;
-		}
+	    $content = new ilPCExternalContent($this->plugin, $a_properties['settings_id']);
+        $renderer = new ilExternalContentRenderer($content);
+
+	    $settings = $content->getSettings();
+	    switch ($settings->getTypeDef()->getLaunchType())
+        {
+            case ilExternalContentType::LAUNCH_TYPE_LINK:
+                $html = '<a href="' . $renderer->render() . '">' .  $this->plugin->txt('launch_content') . '</a>';
+                break;
+
+            case ilExternalContentType::LAUNCH_TYPE_PAGE:
+                // TODO: create link to a new page that renders the content
+                break;
+
+            case ilExternalContentType::LAUNCH_TYPE_EMBED:
+            default:
+                $html = $renderer->render();
+                break;
+        }
+
+        // TODO: add title and description from the properties to the html
+
+		return $html;
 	}
-
-	/**
-	 * Set tabs
-	 *
-	 * @param
-	 * @return
-	 */
-	public function setTabs($a_active)
-	{
-		global $ilTabs, $ilCtrl;
-
-		$pl = $this->getPlugin();
-
-		$ilTabs->addTab("edit", $pl->txt("external_content"), $ilCtrl->getLinkTarget($this, "edit"));
-
-		$ilTabs->activateTab($a_active);
-	}
-
-	/*
-	 * Adapter methods for repository object to page component
-	 */
-
-	public function update()
-	{
-		global $tpl, $lng;
-
-		$form = $this->initForm("edit");
-		if ($form->checkInput()) {
-			//Extra properties has been already loaded in initForm()
-			$existing_properties = $this->getProperties();
-
-			if(isset($existing_properties['obj_id']) AND isset($existing_properties['settings_id'])) {
-				//Update the Page Component Object
-				$pc_element = $this->updateElement($existing_properties);
-
-				//Update the Rep. Obj. DB.
-				$this->getObjGui()->object->setId((int) $existing_properties['obj_id']);
-				$this->getObjGui()->object->setSettingsId((int) $existing_properties['settings_id']);
-				foreach ($this->getObjGui()->object->typedef->getInputFields("object") as $field) {
-					$value = trim($form->getInput("field_" . $field->field_name));
-					$this->getObjGui()->object->saveFieldValue($field->field_name, $value ? $value : $field->default);
-				}
-
-				if ($pc_element) {
-					ilUtil::sendSuccess($lng->txt("msg_obj_modified"), true);
-				}
-			}
-		}
-
-		$form->setValuesByPost();
-		$this->setTabs("edit");
-		$tpl->setContent($form->getHtml());
-	}
-
-	/*
-	 * UTILITY METHODS
-	 */
-
-	/**
-	 * Get a plugin text
-	 * @param $a_var
-	 * @return mixed
-	 */
-	protected function txt($a_var)
-	{
-		return $this->getPlugin()->txt($a_var);
-	}
-
-	/**
-	 * @return ilObjExternalContentGUI
-	 */
-	public function getObjGui()
-	{
-		return $this->obj_gui;
-	}
-
-	/**
-	 * @param ilObjExternalContentGUI $obj_gui
-	 */
-	public function setObjGui($obj_gui)
-	{
-		$this->obj_gui = $obj_gui;
-	}
-
-	public function initObjGUI($a_mode, $a_properties = array()){
-
-		include_once("Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilObjExternalContentGUI.php");
-		include_once("Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilObjExternalContent.php");
-		include_once("Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php");
-
-		switch ($a_mode){
-			case 'form':
-				//Initialize the Object and GUI Class to use their methods
-				$obj_gui = new ilObjExternalContentGUI();
-				$obj = new ilObjExternalContent();
-				$obj->setTypeId((int) $this->getProperties()['type_id']);
-				$obj_gui->object = $obj;
-
-				$this->setObjGui($obj_gui);
-				break;
-			case 'view':
-				$obj_gui = new ilObjExternalContentGUI();
-				$obj = new ilObjExternalContent();
-
-				$obj->setId((int) $a_properties['obj_id']);
-				$obj->setSettingsId((int) $a_properties['settings_id']);
-				$type = new ilExternalContentType((int) $a_properties["type_id"]);
-				$obj->typedef = $type;
-
-				$obj->setContext(array('id' => $a_properties['obj_id'], 'title' => $a_properties['title'], 'type' => $a_properties['type_id']));
-				$obj->setRefId($a_properties['obj_id']);
-				$obj->setTitle($a_properties['title']);
-				$obj->setDescription($a_properties['description']);
-
-				$obj_gui->object = $obj;
-				$this->setObjGui($obj_gui);
-				break;
-		}
-
-	}
-
-	/**
-	 * @return mixed
-	 */
-	public function getTemplate()
-	{
-		return $this->template;
-	}
-
-	/**
-	 * @param mixed $template
-	 */
-	public function setTemplate($template)
-	{
-		$this->template = $template;
-	}
-
-	public function getLaunchLink($a_link_url){
-		$toolbar = new ilToolbarGUI();
-		$toolbar->setFormAction($a_link_url);
-
-		$link = ilSubmitButton::getInstance();
-		$link->setCaption($this->getObjGui()->getTitle(), FALSE);
-		$toolbar->addButtonInstance($link);
-
-		$toolbar->setFormName($this->lng->txt("Link_form_name"));
-
-		return $toolbar->getHTML();
-	}
-
-
 
 }
-
-?>

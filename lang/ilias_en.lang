@@ -1,11 +1,11 @@
 //
-// Copyright (c) 2020 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
+// Copyright (c) 2017 Fred Neumann <fred.neumann@gmx.de>
 // GPLv3, see LICENSE
 //
-// @author Jesus Copado <jesus.copado@fau.de>
-// @version $Id$
+// @author Fred Neumann <fred.neumann@gmx.de>
 //
 
 <!-- language file start -->
-cmd_insert#:#Add External Video/Tool
-external_content#:#External Video/Tool
+cmd_insert#:#Insert External Content
+edit_input_field#:#Edit External Content
+content_plugin_version#:#Content last edited with version

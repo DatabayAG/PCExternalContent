@@ -1,22 +1,21 @@
 <?php
-
-/* Copyright (c) 1998-2017 ILIAS open source, Extended GPL, see docs/LICENSE */
-
-include_once("./Services/COPage/classes/class.ilPageComponentPluginExporter.php");
+/**
+ * Copyright (c) 2021 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
+ * GPLv3, see docs/LICENSE
+ *
+ * @author Fred Neumann <fred.neumann@fau.de>
+ * @author Cornel Musielak <cornel.musielak@fau.de>
+ */
 
 /**
  * Exporter class for the PCExternalContent Plugin
- *
- * @author Jesus Copado <jesus.copado@fau.de>
- * @version $Id$
- *
- * @ingroup ServicesCOPage
  */
 class ilPCExternalContentExporter extends ilPageComponentPluginExporter
 {
 	public function init()
 	{
 	}
+
 	/**
 	 * Get head dependencies
 	 *
@@ -27,28 +26,7 @@ class ilPCExternalContentExporter extends ilPageComponentPluginExporter
 	 */
 	function getXmlExportHeadDependencies($a_entity, $a_target_release, $a_ids)
 	{
-		// collect the files to export
-		$file_ids = array();
-		foreach ($a_ids as $id)
-		{
-			$properties = self::getPCProperties($id);
-			if (isset($properties['page_file']))
-			{
-				$file_ids[] = $properties['page_file'];
-			}
-		}
-
-		// add the files as dependencies
-		if (!empty(($file_ids)))
-		{
-			return array(
-				array(
-					"component" => "Modules/File",
-					"entity" => "file",
-					"ids" => $file_ids)
-			);
-		}
-
+	    // nothing to do
 		return array();
 	}
 
@@ -63,12 +41,9 @@ class ilPCExternalContentExporter extends ilPageComponentPluginExporter
 	 */
 	public function getXmlRepresentation($a_entity, $a_schema_version, $a_id)
 	{
-		/** @var ilPCExternalContentPlugin $plugin */
-		$plugin = ilPluginAdmin::getPluginObject(IL_COMP_SERVICE, 'COPage', 'pgcp', 'PCExternalContent');
-
 		$properties = self::getPCProperties($a_id);
-		$data = $plugin->getData($properties['additional_data_id']);
-		return '<data>'. htmlentities($data) . '</data>';
+		// TODO: get the settings (with input values) for the settings_id stored in the properties
+        // TODO: create an XML structure from it
 	}
 
 	/**
@@ -81,6 +56,7 @@ class ilPCExternalContentExporter extends ilPageComponentPluginExporter
 	 */
 	function getXmlExportTailDependencies($a_entity, $a_target_release, $a_ids)
 	{
+	    // nothing to do
 		return array();
 	}
 
@@ -103,12 +79,12 @@ class ilPCExternalContentExporter extends ilPageComponentPluginExporter
 	public function getValidSchemaVersions($a_entity)
 	{
 		return array(
-			'5.4.0' => array(
+			'5.3.0' => array(
 				'namespace'    => 'http://www.ilias.de/',
 				//'xsd_file'     => 'pctpc_5_3.xsd',
 				'uses_dataset' => false,
-				'min'          => '5.4.0',
-				'max'          => ''
+				'min'          => '0.0.0',
+				'max'          => '1.0.0'
 			)
 		);
 	}

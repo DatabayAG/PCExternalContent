@@ -1,22 +1,19 @@
 <?php
 /**
- * Copyright (c) 2020 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
+ * Copyright (c) 2021 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
  * GPLv3, see docs/LICENSE
- */
-
-include_once("./Services/COPage/classes/class.ilPageComponentPlugin.php");
-
-/**
- * Page Component External Content plugin
  *
- * @author Jesus Copado <jesus.copado@fau.de>
- * @version $Id$
+ * @author Fred Neumann <fred.neumann@fau.de>
+ * @author Cornel Musielak <cornel.musielak@fau.de>
+ */
+ 
+/**
+ * External Content Page Component plugin
  */
 class ilPCExternalContentPlugin extends ilPageComponentPlugin
 {
-
 	/**
-	 * Get plugin name
+	 * Get plugin name 
 	 *
 	 * @return string
 	 */
@@ -27,66 +24,43 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 
 
 	/**
-	 * Set availability of the plugin
+	 * Check if parent type is valid
 	 *
 	 * @return string
 	 */
 	function isValidParentType($a_parent_type)
 	{
-		if (in_array($a_parent_type, array("lm")))
-		{
-			return true;
-		}
-		return false;
+		// TODO: test with these page types, add other types if possible, e.g. 'glo'
+		return in_array($a_parent_type, ['cat', 'crs', 'grp', 'fold', 'lm', 'copa']);
 	}
 
+
 	/**
-	 * Get Javascript files
-	 * @param	string	$a_mode
-	 * @return 	array
+	 * Handle an event
+	 * @param string	$a_component
+	 * @param string	$a_event
+	 * @param mixed		$a_parameter
 	 */
-	function getJavascriptFiles($a_mode = '')
+	public function handleEvent($a_component, $a_event, $a_parameter)
 	{
-		return array();
-	}
-
-	/**
-	 * Get css files
-	 * @param	string	$a_mode
-	 * @return 	array
-	 */
-	function getCssFiles($a_mode = '')
-	{
-		return array();
-	}
-
-	/**
-	 * This function add the Data to the xxco_content
-	 * @param $a_properties
-	 */
-	public static function createInDB($a_properties){
-		global $ilDB;
-
-		$ilDB->insert('xxco_data_settings', array(
-			'obj_id' => array('integer', $a_properties['obj_id']),
-			'type_id' => array('integer', $a_properties['type_id']),
-			'availability_type' => array('integer', 0),
-			'instructions' => array('text', ''),
-			'meta_data_xml' => array('text', ''),
-			'lp_mode' => array('integer', 0),
-			'lp_threshold' => array('float', 0.5),
-			'settings_id' => array('integer', $a_properties['settings_id'])
-		));
+		// nothing to do here yet
 	}
 
 	/**
 	 * This function is called when the page content is cloned
-	 * @param array 	$a_properties		(properties saved in the page, should be modified if neccessary)
-	 * @param string	$a_plugin_version	(plugin version of the properties)
+	 * @param array 	$a_properties		properties saved in the page, (should be modified if neccessary)
+	 * @param string	$a_plugin_version	plugin version of the properties
 	 */
 	public function onClone(&$a_properties, $a_plugin_version)
 	{
+		$settings_id = $a_properties['settings_id'];
+		if (!empty($settings_id))
+		{
+			// TODO: clone the settings via ilExternalContentSettings
+			// TODO: write back the settings_id of the clone to the properties
+		}
 	}
+
 
 	/**
 	 * This function is called before the page content is deleted
@@ -95,6 +69,12 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 	 */
 	public function onDelete($a_properties, $a_plugin_version)
 	{
+		$settings_id = $a_properties['settings_id'];
+		if (!empty($settings_id))
+		{
+			// TODO: get and delete the ilExternalContentSettings
+		}
 	}
-}
 
+
+}
