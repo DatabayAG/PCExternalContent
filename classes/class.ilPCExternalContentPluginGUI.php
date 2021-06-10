@@ -8,6 +8,7 @@
  */
 
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
+require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
 
 /**
  * External Content Page Component GUI
@@ -116,24 +117,53 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	 */
 	protected function initForm($a_create = false)
 	{
-		$form = new ilPropertyFormGUI();
+	    $form = new ilPropertyFormGUI();
 
 		// save and cancel commands
 		if ($a_create)
 		{
-		    // TODO: add here the selection of the type
+		    // TODO: add here the selection of the type X
             /** @see \ilObjExternalContentGUI::initForm() */
 
+            $item = new ilRadioGroupInputGUI($this->lng->txt('type'), 'type_id');
+            $item->setRequired(true);
+            $types = ilExternalContentType::_getTypesData(false, ilExternalContentType::AVAILABILITY_CREATE);
+            foreach ($types as $type)
+            {
+                $option = new ilRadioOption($type['title'], $type['type_id'], $type['description']);
+                $item->addOption($option);
+            }
+            $form->addItem($item);
+
 			$this->addCreationButton($form);
-			$form->addCommandButton("cancel", $this->lng->txt("cancel"));
-			$form->setTitle($this->plugin->getPluginName());
+            $form->addCommandButton("cancel", $this->lng->txt("cancel"));
+            $form->setTitle($this->plugin->getPluginName());
 		}
 		else
 		{
-		    // TODO: add here the form elements for title, description and the type
-            // TODO: leave out 'online' checkbox
-            // TODO: add the type specific form elements
+		    // TODO: add here the form elements for title, description and the type X
+            // TODO: leave out 'online' checkbox X
+            // TODO: add the type specific form elements X
             /** @see \ilObjExternalContentGUI::initForm() */
+
+            $item = new ilNonEditableValueGUI($this->lng->txt('type'), '');
+            $item->setValue($this->object->getTypeDef()->getTitle());
+            $item->setInfo($this->object->getTypeDef()->getDescription());
+            $this->form->addItem($item);
+
+            $item = new ilTextInputGUI($this->lng->txt('title'), 'title');
+            $item->setSize(40);
+            $item->setMaxLength(128);
+            $item->setRequired(true);
+            //$item->setInfo($this->txt('xxco_title_info'));
+            //$item->setValue($a_values['title']);
+            $this->form->addItem($item);
+
+            $item = new ilTextAreaInputGUI($this->lng->txt('description'), 'description');
+            $item->setInfo($this->txt('xxco_description_info'));
+            $item->setRows(2);
+            //$item->setValue($a_values['description']);
+            $this->form->addItem($item);
 
 			$form->addCommandButton("update", $this->lng->txt("save"));
 			$form->addCommandButton("cancel", $this->lng->txt("cancel"));
@@ -151,10 +181,18 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	protected function loadForm($form)
     {
         $properties = $this->getProperties();
-	    // TODO: get title and description from the properties
-        // TODO: get an ilExternalContentSettings object from the id in the properties
-        // TODO: get the input values from the settings
+	    // TODO: get title and description from the properties X
+        // TODO: get an ilExternalContentSettings object from the id in the properties X
+        // TODO: get the input values from the settings X
         /** @see ilObjExternalContentGUI::loadFormValues() */
+        $title = $properties['title'];
+        $description = $properties['description'];
+
+        $exco_settings = new ilExternalContentSettings($properties['settings_id']);
+
+        $form->setTitle($title);
+        $form->setDescription($description);
+        $form->setValuesByArray($exco_settings->getInputValues());
     }
 
     /**
@@ -174,6 +212,17 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
             // TODO: save the form input into the settings
             /** @see ilObjExternalContentGUI::saveFormValues() */
 
+            $properties['title'] = $form->getTitle();
+            $properties['descrption'] = $form->getDescription();
+            if(!empty($properties['settings'])) {
+                $exco_settings = new ilExternalContentSettings($properties['settings_id']);
+            }
+            else {
+                $exco_settings = new ilExternalContentSettings();
+                $exco_settings->
+                $exco_settings->save();
+                $properties['settings_id'] = $exco_settings->getSettingsId();
+            }
 
 			if ($a_create)
 			{
@@ -221,6 +270,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 
             case ilExternalContentType::LAUNCH_TYPE_PAGE:
                 // TODO: create link to a new page that renders the content
+                $html = '<a href="' . $renderer->render() . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a>';
                 break;
 
             case ilExternalContentType::LAUNCH_TYPE_EMBED:
@@ -230,6 +280,8 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
         }
 
         // TODO: add title and description from the properties to the html
+        //$a_properties['title'];
+	    //$a_properties['description'];
 
 		return $html;
 	}

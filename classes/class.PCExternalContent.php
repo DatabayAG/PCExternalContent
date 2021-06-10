@@ -20,6 +20,18 @@ class ilPCExternalContent implements ilExternalContent
     /** @var ilExternalContentSettings */
     protected $settings;
 
+    /** @var ilExternalContentSettings */
+    protected $type;
+
+    /** @var string */
+    protected $return_url;
+
+    /**
+     * array for context information, will be setup in getContext()
+     * @var array
+     */
+    protected $context = array();
+
     /**
      * ilPCExternalContent constructor
      * @param ilPCExternalContentPlugin $plugin;
@@ -27,7 +39,9 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function __construct($plugin, $settings_id)
     {
-        // TODO: initialize the settings property base on the settings id
+        // TODO: initialize the settings property base on the settings id X
+        $this->settings = new ilExternalContentSettings($settings_id);
+        $this->plugin = $plugin;
     }
 
     /**
@@ -64,7 +78,10 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function getTitle()
     {
-        // TODO: Implement getTitle() method. Lookup via object id
+        // TODO: Implement getTitle() method. Lookup via object id X
+        $obj_id = $this->settings->getObjId();
+        $type = new ilExternalContentType($obj_id);
+        return $type->getTitle();
     }
 
     /**
@@ -73,7 +90,11 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function getDescription()
     {
-        // TODO: Implement getDescription() method. Lookup via object id
+        // TODO: Implement getDescription() method. Lookup via object id X
+        // doubled code? -> getTitle
+        $obj_id = $this->settings->getObjId();
+        $type = new ilExternalContentType($obj_id);
+        return $type->getDescription();
     }
 
     /**
@@ -82,9 +103,28 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function getContext()
     {
-        // TODO: Implement getContext() method.
+        // TODO: Implement getContext() method. X
         /** @see ilObjExternalContent::getContext() */
-        return array();
+        $valid_types = array('crs', 'grp', 'cat', 'root');
+        global $DIC;
+        $tree = $DIC->repositoryTree();
+        if (!isset($this->context)) {
+            $this->context = array();
+            $path = array_reverse($tree->getPathFull($this->getRefId()));
+            foreach ($path as $key => $row)
+            {
+                if (in_array($row['type'], $valid_types))
+                {
+                    if (in_array($row['type'], array('cat', 'root')) && !empty($this->context))
+                        break;
+
+                    $this->context['id'] = $row['child'];
+                    $this->context['title'] = $row['title'];
+                    $this->context['type'] = $row['type'];
+                }
+            }
+        }
+        return $this->context;
     }
 
     /**
@@ -104,7 +144,8 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function getReturnUrl()
     {
-        // TODO: Implement getReturnUrl() method.
+        // TODO: Implement getReturnUrl() method. ???
+        // don't know how to, do i need a setReturnUrl? inherit from ilObjExternalContent
     }
 
     /**

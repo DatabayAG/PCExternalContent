@@ -6,7 +6,7 @@
  * @author Fred Neumann <fred.neumann@fau.de>
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
- 
+require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
 /**
  * External Content Page Component plugin
  */
@@ -56,8 +56,11 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 		$settings_id = $a_properties['settings_id'];
 		if (!empty($settings_id))
 		{
-			// TODO: clone the settings via ilExternalContentSettings
-			// TODO: write back the settings_id of the clone to the properties
+		    $this->clone_settings;
+			// TODO: clone the settings via ilExternalContentSettings X
+            ilExternalContentSettings::clone($this->clone_settings);
+			// TODO: write back the settings_id of the clone to the properties X
+            $a_properties['settings_id'] = $this->clone_settings['settings_id'];
 		}
 	}
 
@@ -72,7 +75,9 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 		$settings_id = $a_properties['settings_id'];
 		if (!empty($settings_id))
 		{
-			// TODO: get and delete the ilExternalContentSettings
+			// TODO: get and delete the ilExternalContentSettings X
+            $exco_settings = new ilExternalContentSettings($settings_id);
+            $exco_settings->delete();
 		}
 	}
 
