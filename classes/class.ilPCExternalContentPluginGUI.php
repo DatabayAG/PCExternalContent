@@ -207,19 +207,20 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 		{
 			$properties = $this->getProperties();
 
-            // TODO: set the title and description directly from the form in the properties
-            // TODO: get an ilExternalContentSettings object from the id in the properties (create and save it if the id is empty)
-            // TODO: save the form input into the settings
+            // TODO: set the title and description directly from the form in the properties X
+            // TODO: get an ilExternalContentSettings object from the id in the properties (create and save it if the id is empty) X
+            // TODO: save the form input into the settings X
             /** @see ilObjExternalContentGUI::saveFormValues() */
 
             $properties['title'] = $form->getTitle();
             $properties['descrption'] = $form->getDescription();
-            if(!empty($properties['settings'])) {
+            if(!empty($properties['settings_id'])) {
                 $exco_settings = new ilExternalContentSettings($properties['settings_id']);
             }
             else {
                 $exco_settings = new ilExternalContentSettings();
-                $exco_settings->
+				//CM TODO built up settings without settings-id? how?
+                //$exco_settings->
                 $exco_settings->save();
                 $properties['settings_id'] = $exco_settings->getSettingsId();
             }
@@ -270,6 +271,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 
             case ilExternalContentType::LAUNCH_TYPE_PAGE:
                 // TODO: create link to a new page that renders the content
+				//  !!at the moment only copied from above. don't know if it is correct
                 $html = '<a href="' . $renderer->render() . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a>';
                 break;
 
@@ -279,7 +281,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                 break;
         }
 
-        // TODO: add title and description from the properties to the html
+        //CM TODO: add title and description from the properties to the html ???
         //$a_properties['title'];
 	    //$a_properties['description'];
 
