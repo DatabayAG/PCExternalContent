@@ -51,7 +51,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 			default:
 				// perform valid commands
 				$cmd = $this->ctrl->getCmd();
-				if (in_array($cmd, array("create", "save", "edit", "update", "cancel", "downloadFile")))
+				if (in_array($cmd, array("create", "save", "edit", "update", "cancel", "viewPage")))
 				{
 					$this->$cmd();
 				}
@@ -209,6 +209,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
             $properties['descrption'] = $form->getDescription();
 
             $exco_settings = new ilExternalContentSettings($properties['settings_id']);
+            $exco_settings->setObjId($this->plugin->getParentId());
             if (empty($exco_settings->getSettingsId())) {
                 $exco_settings->save();
             }
@@ -268,7 +269,10 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                 // TODO: no! A call of render() delivers the whole page content in this case
                 // This GUI must be made possible render a page through executeCommand
                 // the link to that page has to be provided by $this->>ctrl->getLinkTarget, using an array with ilUIPluginRouterGUI and this class
-                $html = '<a href="' . $renderer->render() . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a>';
+                $this->ctrl->setParameterByClass('ilPCExternalContentGUI', 'settings_id', $settings->getSettingsId());
+                $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentGUI'], 'viewPage');
+
+                $html = '<a href="' . $url . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a>';
                 break;
 
             case ilExternalContentType::LAUNCH_TYPE_EMBED:
