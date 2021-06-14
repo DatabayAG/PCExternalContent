@@ -33,7 +33,7 @@ class ilPCExternalContentImporter extends ilPageComponentPluginImporter
 		$properties = self::getPCProperties($new_id);
 		$version = self::getPCVersion($new_id);
 
-		// TODO: analyze the XMLm create settings, set the settings_id in the properties
+		// TODO: analyze the XML, create settings, set the settings_id in the properties
 
 		self::setPCProperties($new_id, $properties);
 		self::setPCVersion($new_id, $version);

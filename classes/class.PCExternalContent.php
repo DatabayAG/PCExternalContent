@@ -39,7 +39,6 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function __construct($plugin, $settings_id)
     {
-        // TODO: initialize the settings property base on the settings id X
         $this->settings = new ilExternalContentSettings($settings_id);
         $this->plugin = $plugin;
     }
@@ -74,27 +73,21 @@ class ilPCExternalContent implements ilExternalContent
 
     /**
      * Get the title of the parent object (learning module, content page)
-     * @return int
+     * @return string
      */
     public function getTitle()
     {
-        // TODO: Implement getTitle() method. Lookup via object id X
-        $obj_id = $this->settings->getObjId();
-        $type = new ilExternalContentType($obj_id);
-        return $type->getTitle();
+        return ilObject::_lookupTitle($this->getId());
     }
 
     /**
      * Get the description of the parent object (learning module, content page)
-     * @return int
+     * @return string
      */
     public function getDescription()
     {
-        // TODO: Implement getDescription() method. Lookup via object id X
-        // doubled code? -> getTitle
-        $obj_id = $this->settings->getObjId();
-        $type = new ilExternalContentType($obj_id);
-        return $type->getDescription();
+        // TODO: see getTitle()
+        return '';
     }
 
     /**
@@ -103,7 +96,6 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function getContext()
     {
-        // TODO: Implement getContext() method. X
         /** @see ilObjExternalContent::getContext() */
         $valid_types = array('crs', 'grp', 'cat', 'root');
         global $DIC;
@@ -144,8 +136,19 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function getReturnUrl()
     {
-        // TODO: Implement getReturnUrl() method. ???
-        // don't know how to, do i need a setReturnUrl? inherit from ilObjExternalContent
+        // the return url is the URL of the content page on which the content is displayed
+        // it depends on the page type
+        switch ($this->plugin->getParentType()) {
+            // container page, content page
+            case 'cont':
+            case 'copa':
+                return ilLink::_getStaticLink($this->getRefId());
+
+            case 'lm':
+                // TODO: better link to the specific page in the learning module
+                return ilLink::_getStaticLink($this->getRefId());
+
+        }
     }
 
     /**
