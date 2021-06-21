@@ -9,7 +9,9 @@
 
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
-
+require_once(__DIR__ . '/class.PCExternalContent.php');
+require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentRenderer.php');
+require_once("./include/inc.debug.php"); // TODO REMOVE AFTER DEBUG
 /**
  * External Content Page Component GUI
  *
@@ -90,8 +92,6 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	public function edit()
 	{
         $form = $this->initForm();
-
-
 		$this->tpl->setContent($form->getHTML());
 	}
 	
@@ -110,6 +110,19 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 		$this->tpl->setContent($form->getHtml());
 	}
 
+    /**
+     * View Page
+     */
+    public function viewPage()
+    {
+        $properties = $this->getProperties();
+        $content = new ilPCExternalContent($this->plugin,  $properties['settings_id']);
+        $renderer = new ilExternalContentRenderer($content);
+        $renderer->render();
+        //CM TODO: Does the command need to return something? especially to the template in this case?
+        //need to check the calling function getLinkTargetByClass
+    }
+
 
 	/**
 	 * Init creation editing form
@@ -117,6 +130,8 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	 */
 	protected function initForm($a_create = false)
 	{
+	    include_once "./include/inc.debug.php";
+
 	    $form = new ilPropertyFormGUI();
 
 		// save and cancel commands
@@ -154,17 +169,23 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
             $item->setSize(40);
             $item->setMaxLength(128);
             $item->setRequired(true);
-            //$item->setInfo($this->txt('xxco_title_info'));
-            //$item->setValue($a_values['title']);
+            $item->setValue($this->getProperties()['title']);
             $form->addItem($item);
 
             $item = new ilTextAreaInputGUI($this->lng->txt('description'), 'description');
             $item->setInfo($this->plugin->txt('description_info'));
             $item->setRows(2);
-            //$item->setValue($a_values['description']);
+            $item->setValue($this->getProperties()['description']);
             $form->addItem($item);
 
             // TODO: add the type specific form elements
+            // CM TODO: look up at types (fields etc.)
+            //$this->object->getSettings()->getTypeDef()->addFormElements($this->form, $a_values, "object");
+            $settings_id = $properties['settings_id'];
+            $exco_settings = new ilExternalContentSettings($settings_id);
+            $my_value = $exco_settings->getTypeDef()->getFormValues($form);
+
+            log_var($my_value, "form values");
 
 			$form->addCommandButton("update", $this->lng->txt("save"));
 			$form->addCommandButton("cancel", $this->lng->txt("cancel"));
@@ -214,9 +235,12 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                 $exco_settings->save();
             }
             $properties['settings_id'] = $exco_settings->getSettingsId();
-
-            // TODO: save the form input into the settings X
             /** @see ilObjExternalContentGUI::saveFormValues() */
+            foreach ($exco_settings->getTypeDef()->getFormValues($form) as $field_name => $field_value)
+            {
+                $exco_settings->saveInputValue($field_name, $field_value);
+            }
+            //CM TODO: need of settings save? $exco_setting->save();
 
 
 			if ($a_create)
@@ -250,9 +274,6 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	 */
 	public function getElementHTML($a_mode, array $a_properties, $a_plugin_version)
 	{
-	    require_once (__DIR__ . '/class.PCExternalContent.php');
-        require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentRenderer.php');
-
 	    $content = new ilPCExternalContent($this->plugin, $a_properties['settings_id']);
         $renderer = new ilExternalContentRenderer($content);
 
@@ -264,11 +285,6 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                 break;
 
             case ilExternalContentType::LAUNCH_TYPE_PAGE:
-                // TODO: create link to a new page that renders the content
-				//  !!at the moment only copied from above. don't know if it is correct
-                // TODO: no! A call of render() delivers the whole page content in this case
-                // This GUI must be made possible render a page through executeCommand
-                // the link to that page has to be provided by $this->>ctrl->getLinkTarget, using an array with ilUIPluginRouterGUI and this class
                 $this->ctrl->setParameterByClass('ilPCExternalContentGUI', 'settings_id', $settings->getSettingsId());
                 $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentGUI'], 'viewPage');
 
@@ -281,9 +297,12 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                 break;
         }
 
-        //CM TODO: add title and description from the properties to the html ???
-        //$a_properties['title'];
-	    //$a_properties['description'];
+        //TODO: add title and description from the properties to the html
+        //is this the right way? no possibility to deactive it, so i have to check if title and description are ment to be viewable
+        $html = "<div>".$a_properties['title']."</div><br />".$html ."<br /><p>".$a_properties['description']."</p>";
+
+
+	    log_var($html, "HTML: ");
 
 		return $html;
 	}

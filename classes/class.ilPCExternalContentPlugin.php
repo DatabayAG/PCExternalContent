@@ -22,7 +22,6 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 		return "PCExternalContent";
 	}
 
-
 	/**
 	 * Check if parent type is valid
 	 *
@@ -31,6 +30,7 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 	function isValidParentType($a_parent_type)
 	{
 		// TODO: test with these page types, add other types if possible, e.g. 'glo'
+        // CM TODO: i don't find a list for the page types, only in 'icons'. where to find?
 		return in_array($a_parent_type, ['cat', 'crs', 'grp', 'fold', 'lm', 'copa']);
 	}
 
@@ -76,7 +76,6 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 		$settings_id = $a_properties['settings_id'];
 		if (!empty($settings_id))
 		{
-			// TODO: get and delete the ilExternalContentSettings X
             $exco_settings = new ilExternalContentSettings($settings_id);
             $exco_settings->delete();
 		}
