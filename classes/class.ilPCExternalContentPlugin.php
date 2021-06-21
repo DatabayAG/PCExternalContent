@@ -7,6 +7,8 @@
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
+require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
+
 /**
  * External Content Page Component plugin
  */
@@ -31,6 +33,8 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 	{
 		// TODO: test with these page types, add other types if possible, e.g. 'glo'
         // CM TODO: i don't find a list for the page types, only in 'icons'. where to find?
+        // FN: see SELECT * FROM object_data WHERE TYPE='typ'
+        //      but not all of them are repository objects and only some of them have a page editor
 		return in_array($a_parent_type, ['cat', 'crs', 'grp', 'fold', 'lm', 'copa']);
 	}
 

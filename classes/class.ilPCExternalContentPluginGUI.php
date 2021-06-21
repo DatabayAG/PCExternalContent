@@ -79,8 +79,10 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 		$form = $this->initForm(true);
 		if ($this->saveForm($form, true))
 		{
-			ilUtil::sendSuccess($this->lng->txt("msg_obj_modified"), true);
-			$this->returnToParent();
+			ilUtil::sendSuccess($this->lng->txt("msg_obj_modified"));
+			// directly edit the type specific settings after typeis chosen
+			$this->edit();
+			return;
 		}
 		$form->setValuesByPost();
 		$this->tpl->setContent($form->getHtml());
@@ -91,7 +93,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	 */
 	public function edit()
 	{
-        $form = $this->initForm();
+        $form = $this->initForm(false);
 		$this->tpl->setContent($form->getHTML());
 	}
 	
@@ -132,9 +134,24 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	{
 	    include_once "./include/inc.debug.php";
 
+        $properties = $this->getProperties();
+
 	    $form = new ilPropertyFormGUI();
 
-		// save and cancel commands
+	    // enter title and description also when type is chosen
+        $item = new ilTextInputGUI($this->lng->txt('title'), 'title');
+        $item->setSize(40);
+        $item->setMaxLength(128);
+        $item->setValue($properties['title']);
+        $form->addItem($item);
+
+        $item = new ilTextAreaInputGUI($this->lng->txt('description'), 'description');
+        $item->setInfo($this->plugin->txt('description_info'));
+        $item->setRows(2);
+        $item->setValue($properties['description']);
+        $form->addItem($item);
+
+        // save and cancel commands
 		if ($a_create)
 		{
             /** @see \ilObjExternalContentGUI::initForm() */
@@ -151,7 +168,8 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 
 			$this->addCreationButton($form);
             $form->addCommandButton("cancel", $this->lng->txt("cancel"));
-            $form->setTitle($this->plugin->getPluginName());
+            $form->setTitle($this->plugin->txt('cmd_insert'));
+            $form->setFormAction($this->ctrl->getFormAction($this, 'create'));
 		}
 		else
 		{
@@ -165,54 +183,26 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
             $item->setInfo($settings->getTypeDef()->getDescription());
             $form->addItem($item);
 
-            $item = new ilTextInputGUI($this->lng->txt('title'), 'title');
-            $item->setSize(40);
-            $item->setMaxLength(128);
-            $item->setRequired(true);
-            $item->setValue($this->getProperties()['title']);
-            $form->addItem($item);
-
-            $item = new ilTextAreaInputGUI($this->lng->txt('description'), 'description');
-            $item->setInfo($this->plugin->txt('description_info'));
-            $item->setRows(2);
-            $item->setValue($this->getProperties()['description']);
-            $form->addItem($item);
-
             // TODO: add the type specific form elements
             // CM TODO: look up at types (fields etc.)
             //$this->object->getSettings()->getTypeDef()->addFormElements($this->form, $a_values, "object");
             $settings_id = $properties['settings_id'];
             $exco_settings = new ilExternalContentSettings($settings_id);
-            $my_value = $exco_settings->getTypeDef()->getFormValues($form);
-
-            log_var($my_value, "form values");
+            $values = [];
+            foreach ($settings->getInputValues() as $field_name => $field_value) {
+                $values['field_' . $field_name] = $field_value;
+            }
+            $exco_settings->getTypeDef()->addFormElements($form, $values);
 
 			$form->addCommandButton("update", $this->lng->txt("save"));
 			$form->addCommandButton("cancel", $this->lng->txt("cancel"));
-			$form->setTitle($this->plugin->getPluginName());
+			$form->setTitle($this->plugin->txt('edit_input_field'));
+            $form->setFormAction($this->ctrl->getFormAction($this, 'update'));
 		}
-		
-		$form->setFormAction($this->ctrl->getFormAction($this));
+
 		return $form;
 	}
 
-    /**
-     * Load the form values for editing
-     * @param ilPropertyFormGUI $form
-     */
-	protected function loadForm($form)
-    {
-        $properties = $this->getProperties();
-        /** @see ilObjExternalContentGUI::loadFormValues() */
-        $title = $properties['title'];
-        $description = $properties['description'];
-
-        $exco_settings = new ilExternalContentSettings($properties['settings_id']);
-
-        $form->setTitle($title);
-        $form->setDescription($description);
-        $form->setValuesByArray($exco_settings->getInputValues());
-    }
 
     /**
      * Save the form values
@@ -225,32 +215,27 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 		if ($form->checkInput())
 		{
 			$properties = $this->getProperties();
+            $properties['title'] = $form->getInput('title');
+            $properties['description'] = $form->getInput('description');
 
-            $properties['title'] = $form->getTitle();
-            $properties['descrption'] = $form->getDescription();
 
-            $exco_settings = new ilExternalContentSettings($properties['settings_id']);
-            $exco_settings->setObjId($this->plugin->getParentId());
-            if (empty($exco_settings->getSettingsId())) {
-                $exco_settings->save();
+            if ($a_create) {
+                $exco_settings = new ilExternalContentSettings();
+                $exco_settings->setTypeId($form->getInput('type_id'));
+                $exco_settings->setObjId($this->plugin->getParentId());
+                $exco_settings->save(); // this creates the settings id
+
+                $properties['settings_id'] = $exco_settings->getSettingsId();
+                return $this->createElement($properties);
             }
-            $properties['settings_id'] = $exco_settings->getSettingsId();
-            /** @see ilObjExternalContentGUI::saveFormValues() */
-            foreach ($exco_settings->getTypeDef()->getFormValues($form) as $field_name => $field_value)
-            {
-                $exco_settings->saveInputValue($field_name, $field_value);
+            else {
+                $exco_settings = new ilExternalContentSettings($properties['settings_id']);
+                foreach ($exco_settings->getTypeDef()->getFormValues($form) as $field_name => $field_value) {
+                    $exco_settings->saveInputValue($field_name, $field_value);
+                }
+
+                return $this->updateElement($properties);
             }
-            //CM TODO: need of settings save? $exco_setting->save();
-
-
-			if ($a_create)
-			{
-				return $this->createElement($properties);
-			}
-			else
-			{
-				return $this->updateElement($properties);
-			}
 		}
 
 		return false;
