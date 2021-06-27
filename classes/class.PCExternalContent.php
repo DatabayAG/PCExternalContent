@@ -9,7 +9,7 @@
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/interface.ilExternalContent.php');
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
-require_once("./include/inc.debug.php"); // TODO REMOVE AFTER DEBUG
+//require_once("./include/inc.debug.php"); // TODO REMOVE AFTER DEBUG
 /**
  * Representation of the page content for the ExternalContent plugin
  * This object is delivered ilExternalContentRenderer
@@ -44,7 +44,7 @@ class ilPCExternalContent implements ilExternalContent
         $this->settings = new ilExternalContentSettings($settings_id);
         $this->plugin = $plugin;
         $muh = "CONSTRUCTOR";
-        log_var($muh, "__construct: ");
+        //log_var($muh, "__construct: ");
     }
 
     /**

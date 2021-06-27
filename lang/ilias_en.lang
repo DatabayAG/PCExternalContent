@@ -9,3 +9,6 @@
 cmd_insert#:#Insert External Content
 edit_input_field#:#Edit External Content
 content_plugin_version#:#Content last edited with version
+description_info#:#The description is shown for better understanding under every content.
+show_title#:#Show title
+show_description#:#Show description

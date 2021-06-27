@@ -11,7 +11,6 @@ require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
 require_once(__DIR__ . '/class.PCExternalContent.php');
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentRenderer.php');
-require_once("./include/inc.debug.php"); // TODO REMOVE AFTER DEBUG
 /**
  * External Content Page Component GUI
  *
@@ -118,11 +117,9 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
     public function viewPage()
     {
         $properties = $this->getProperties();
-        $content = new ilPCExternalContent($this->plugin,  $properties['settings_id']);
+        $content = new ilPCExternalContent($this->plugin, $properties['settings_id']);
         $renderer = new ilExternalContentRenderer($content);
         $renderer->render();
-        //CM TODO: Does the command need to return something? especially to the template in this case?
-        //need to check the calling function getLinkTargetByClass
     }
 
 
@@ -150,6 +147,14 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
         $item->setRows(2);
         $item->setValue($properties['description']);
         $form->addItem($item);
+
+		$item = new ilCheckboxInputGUI($this->lng->txt('show_title'), 'show_title_bool');
+		$item->setValue($properties['show_title_bool']);
+		$form->addItem($item);
+
+		$item = new ilCheckboxInputGUI($this->lng->txt('show_description'), 'show_description_bool');
+		$item->setValue($properties['show_description_bool']);
+		$form->addItem($item);
 
         // save and cancel commands
 		if ($a_create)
@@ -183,9 +188,6 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
             $item->setInfo($settings->getTypeDef()->getDescription());
             $form->addItem($item);
 
-            // TODO: add the type specific form elements
-            // CM TODO: look up at types (fields etc.)
-            //$this->object->getSettings()->getTypeDef()->addFormElements($this->form, $a_values, "object");
             $settings_id = $properties['settings_id'];
             $exco_settings = new ilExternalContentSettings($settings_id);
             $values = [];
@@ -217,6 +219,8 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 			$properties = $this->getProperties();
             $properties['title'] = $form->getInput('title');
             $properties['description'] = $form->getInput('description');
+			$properties['show_title_bool'] = $form->getInput('show_title_bool');
+			$properties['show_description_bool'] = $form->getInput['show_description_bool'];
 
 
             if ($a_create) {
@@ -263,31 +267,32 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
         $renderer = new ilExternalContentRenderer($content);
 
 	    $settings = $content->getSettings();
+		if(!$a_properties['show_title_bool']) {
+			$html = "<h2><div>".$a_properties['title']."</div></h2><br />";
+		}
+
 	    switch ($settings->getTypeDef()->getLaunchType())
         {
             case ilExternalContentType::LAUNCH_TYPE_LINK:
-                $html = '<a href="' . $renderer->render() . '">' .  $this->plugin->txt('launch_content') . '</a>';
+                $html .= '<a href="' . $renderer->render() . '">' .  $this->plugin->txt('launch_content') . '</a>';
                 break;
 
             case ilExternalContentType::LAUNCH_TYPE_PAGE:
                 $this->ctrl->setParameterByClass('ilPCExternalContentGUI', 'settings_id', $settings->getSettingsId());
                 $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentGUI'], 'viewPage');
 
-                $html = '<a href="' . $url . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a>';
+                $html .= '<a href="' . $url . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a>';
                 break;
 
             case ilExternalContentType::LAUNCH_TYPE_EMBED:
             default:
-                $html = $renderer->render();
+                $html .= $renderer->render();
                 break;
         }
 
-        //TODO: add title and description from the properties to the html
-        //is this the right way? no possibility to deactive it, so i have to check if title and description are ment to be viewable
-        $html = "<div>".$a_properties['title']."</div><br />".$html ."<br /><p>".$a_properties['description']."</p>";
-
-
-	    log_var($html, "HTML: ");
+		if(!$a_properties['show_description_bool']) {
+        	$html .= "<p>".$a_properties['description']."</p>";
+		}
 
 		return $html;
 	}

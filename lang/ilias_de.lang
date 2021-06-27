@@ -10,3 +10,5 @@ cmd_insert#:#Externen Inhalt einfügen
 edit_input_field#:#Externen Inhalt bearbeiten
 content_plugin_version#:#Inhalt zuletzt bearbeitet mit Version
 description_info#:#Die Beschreibung wird als Legende unter dem eingebetteten Inhalt angezeigt.
+show_title#:#Titel anzeigen
+show_description#:#Beschreibung anzeigen
