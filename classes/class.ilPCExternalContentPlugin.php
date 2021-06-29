@@ -84,6 +84,4 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
             $exco_settings->delete();
 		}
 	}
-
-
 }

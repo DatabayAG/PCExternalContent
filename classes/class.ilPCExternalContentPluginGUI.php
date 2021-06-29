@@ -129,8 +129,6 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	 */
 	protected function initForm($a_create = false)
 	{
-	    include_once "./include/inc.debug.php";
-
         $properties = $this->getProperties();
 
 	    $form = new ilPropertyFormGUI();
@@ -147,14 +145,6 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
         $item->setRows(2);
         $item->setValue($properties['description']);
         $form->addItem($item);
-
-		$item = new ilCheckboxInputGUI($this->lng->txt('show_title'), 'show_title_bool');
-		$item->setValue($properties['show_title_bool']);
-		$form->addItem($item);
-
-		$item = new ilCheckboxInputGUI($this->lng->txt('show_description'), 'show_description_bool');
-		$item->setValue($properties['show_description_bool']);
-		$form->addItem($item);
 
         // save and cancel commands
 		if ($a_create)
@@ -219,9 +209,6 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 			$properties = $this->getProperties();
             $properties['title'] = $form->getInput('title');
             $properties['description'] = $form->getInput('description');
-			$properties['show_title_bool'] = $form->getInput('show_title_bool');
-			$properties['show_description_bool'] = $form->getInput['show_description_bool'];
-
 
             if ($a_create) {
                 $exco_settings = new ilExternalContentSettings();
@@ -266,9 +253,15 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	    $content = new ilPCExternalContent($this->plugin, $a_properties['settings_id']);
         $renderer = new ilExternalContentRenderer($content);
 
+        $html = "";
+
 	    $settings = $content->getSettings();
-		if(!$a_properties['show_title_bool']) {
-			$html = "<h2><div>".$a_properties['title']."</div></h2><br />";
+
+	    $title = $a_properties['title'];
+	    $description = $a_properties['description'];
+
+		if(isset($title) === true && $title !== '') {
+			$html = "<h2><div>".$title."</div></h2><br />";
 		}
 
 	    switch ($settings->getTypeDef()->getLaunchType())
@@ -290,8 +283,8 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                 break;
         }
 
-		if(!$a_properties['show_description_bool']) {
-        	$html .= "<p>".$a_properties['description']."</p>";
+		if(isset($description) === true && $description !== '') {
+        	$html .= "<p>".$description."</p>";
 		}
 
 		return $html;
