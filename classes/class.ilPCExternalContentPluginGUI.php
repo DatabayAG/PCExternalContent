@@ -241,6 +241,28 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 		$this->returnToParent();
 	}
 
+    /**
+     * setup css-style string for 'response'-iframe display
+     */
+    protected function getIFrameStyle() {
+        return "<style type='text/css'>
+                        .embed-container {
+                        position: relative; 
+                        padding-bottom: 56.25%; /* ratio 16x9 */
+                        height: 0; 
+                        overflow: hidden; 
+                        width: 60%;
+                        height: auto;
+                        }
+                        .embed-container iframe {
+                        position: absolute; 
+                        top: 0; 
+                        left: 0; 
+                        width: 100%; 
+                        height: 100%;
+                        }
+                     </style>";
+    }
 
 	/**
 	 * Get HTML for element
@@ -253,15 +275,14 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	    $content = new ilPCExternalContent($this->plugin, $a_properties['settings_id']);
         $renderer = new ilExternalContentRenderer($content);
 
-        $html = "";
-
 	    $settings = $content->getSettings();
-
 	    $title = $a_properties['title'];
 	    $description = $a_properties['description'];
 
+	    $html = $this->getIFrameStyle() . "<div class='embed-container'>";
+
 		if(isset($title) === true && $title !== '') {
-			$html = "<h2><div>".$title."</div></h2><br />";
+			$html .= "<h2><div>".$title."</div></h2><br />";
 		}
 
 	    switch ($settings->getTypeDef()->getLaunchType())
@@ -287,7 +308,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
         	$html .= "<p>".$description."</p>";
 		}
 
-		return $html;
+		return $html."</div>";
 	}
 
 }
