@@ -298,23 +298,25 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	    $title = $a_properties['title'];
 	    $description = $a_properties['description'];
 
-	    $html = $this->getIFrameStyle() . "<div class='embed-container'>";
+	    $html = '';
+	    // $html = $this->getIFrameStyle() . "<div class='embed-container'>";
 
-		if(isset($title) === true && $title !== '') {
-			$html .= "<h2><div>".$title."</div></h2><br />";
+		if(!empty($title)) {
+		    // todo: use accesible style
+			$html .= "<h3>".$title."</h3>";
 		}
 
 	    switch ($settings->getTypeDef()->getLaunchType())
         {
             case ilExternalContentType::LAUNCH_TYPE_LINK:
-                $html .= '<a href="' . $renderer->render() . '">' .  $this->plugin->txt('launch_content') . '</a>';
+                $html .= '<p><a href="' . $renderer->render() . '">' .  $this->plugin->txt('launch_content') . '</a></p>';
                 break;
 
             case ilExternalContentType::LAUNCH_TYPE_PAGE:
                 $this->ctrl->setParameterByClass('ilPCExternalContentGUI', 'settings_id', $settings->getSettingsId());
                 $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentGUI'], 'viewPage');
 
-                $html .= '<a href="' . $url . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a>';
+                $html .= '<p><a href="' . $url . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a></p>';
                 break;
 
             case ilExternalContentType::LAUNCH_TYPE_EMBED:
@@ -323,11 +325,12 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                 break;
         }
 
-		if(isset($description) === true && $description !== '') {
-        	$html .= "<p>".$description."</p>";
+		if(!empty($description)) {
+		    // style taken from media object
+        	$html .= '<figcaption><strong>'.$description."</strong></figcaption>";
 		}
 
-		return $html."</div>";
+		return $html;
 	}
 
 }
