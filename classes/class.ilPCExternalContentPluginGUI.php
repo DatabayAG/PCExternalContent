@@ -9,8 +9,8 @@
 
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
-require_once(__DIR__ . '/class.PCExternalContent.php');
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentRenderer.php');
+require_once(__DIR__ . '/class.ilPCExternalContent.php');
 /**
  * External Content Page Component GUI
  *
@@ -233,19 +233,21 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
             $exco_settings = new ilExternalContentSettings();
             $exco_settings->setTypeId($form->getInput('type_id'));
             $exco_settings->setObjId($this->plugin->getParentId());
-            $exco_settings->save(); // this creates the settings id
             foreach ($exco_settings->getTypeDef()->getFormValues($form) as $field_name => $field_value) {
-                $exco_settings->saveInputValue($field_name, $field_value);
+                $exco_settings->setInputValue($field_name, $field_value);
             }
+            $exco_settings->save(); // this creates the settings id
 
             $properties['settings_id'] = $exco_settings->getSettingsId();
             return $this->createElement($properties);
         }
         else {
             $exco_settings = new ilExternalContentSettings($properties['settings_id']);
+            $exco_settings->setInputValues([]);
             foreach ($exco_settings->getTypeDef()->getFormValues($form) as $field_name => $field_value) {
-                $exco_settings->saveInputValue($field_name, $field_value);
+                $exco_settings->setInputValue($field_name, $field_value);
             }
+            $exco_settings->save();
 
             return $this->updateElement($properties);
         }
@@ -299,7 +301,6 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	    $description = $a_properties['description'];
 
 	    $html = '';
-	    // $html = $this->getIFrameStyle() . "<div class='embed-container'>";
 
 		if(!empty($title)) {
 		    // todo: use accesible style

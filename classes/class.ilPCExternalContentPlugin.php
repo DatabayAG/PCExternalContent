@@ -26,16 +26,36 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 
 	/**
 	 * Check if parent type is valid
-	 *
+     * @see getParentType() of classes extending ilPageObject
+	 * @see PCExternalContent::getReturnUrl()
 	 * @return string
 	 */
 	function isValidParentType($a_parent_type)
 	{
-		// TODO: test with these page types, add other types if possible, e.g. 'glo'
-        // CM TODO: i don't find a list for the page types, only in 'icons'. where to find?
-        // FN: see SELECT * FROM object_data WHERE TYPE='typ'
-        //      but not all of them are repository objects and only some of them have a page editor
-		return in_array($a_parent_type, ['cat', 'crs', 'grp', 'fold', 'lm', 'copa']);
+		// TODO: test with these page types, add other types if possible, e.g. 'gdf'
+		return in_array($a_parent_type, [
+//		      'blp',      // Blog
+//            'copa',     // Content Page
+//            'lobj',     // Learning Objective
+//            'dcpf',     // Data Collection Detailed View
+//            'gdf',      // Glossary Definition
+            'lm',       // Learning Module
+//            'mep',      // Media Pool
+//            'prtf',     // Portfolio
+//            'prtt',     // Portfolio Template
+//            'sahs',     // Scorm Learning Module
+//            'qht',      // Test Question Hint
+//            'qpl',      // Test Question
+//            'qfbg',     // Test Question General Feedback
+//            'qfbs',     // Test Question Specific Feedback
+//            'wpg',      // Wiki
+//            'auth',     // Login
+            'cont',     // Container (Category, Course, Group, Folder)
+//            'cstr',     // Container Start Objects
+//            'stys',     // Page Layout
+//            'impr',     // Imprint
+
+        ]);
 	}
 
 
