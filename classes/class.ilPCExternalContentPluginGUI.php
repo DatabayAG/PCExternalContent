@@ -293,42 +293,45 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	 */
 	public function getElementHTML($a_mode, array $a_properties, $a_plugin_version)
 	{
-	    $content = new ilPCExternalContent($this->plugin, $a_properties['settings_id']);
-        $renderer = new ilExternalContentRenderer($content);
-
-	    $settings = $content->getSettings();
-	    $title = $a_properties['title'];
-	    $description = $a_properties['description'];
-
 	    $html = '';
 
-		if(!empty($title)) {
+		if(!empty($a_properties['title'])) {
 		    // todo: use accesible style
-			$html .= "<h3>".$title."</h3>";
+			$html .= "<h3>".$a_properties['title'] ."</h3>";
 		}
 
-	    switch ($settings->getTypeDef()->getLaunchType())
-        {
-            case ilExternalContentType::LAUNCH_TYPE_LINK:
-                $html .= '<p><a href="' . $renderer->render() . '">' .  $this->plugin->txt('launch_content') . '</a></p>';
-                break;
+		if (!empty($a_properties['settings_id'])) {
+            $content = new ilPCExternalContent($this->plugin, $a_properties['settings_id']);
+            $renderer = new ilExternalContentRenderer($content);
+            $settings = $content->getSettings();
 
-            case ilExternalContentType::LAUNCH_TYPE_PAGE:
-                $this->ctrl->setParameterByClass('ilPCExternalContentGUI', 'settings_id', $settings->getSettingsId());
-                $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentGUI'], 'viewPage');
+            switch ($settings->getTypeDef()->getLaunchType())
+            {
+                case ilExternalContentType::LAUNCH_TYPE_LINK:
+                    $html .= '<p><a href="' . $renderer->render() . '">' .  $this->plugin->txt('launch_content') . '</a></p>';
+                    break;
 
-                $html .= '<p><a href="' . $url . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a></p>';
-                break;
+                case ilExternalContentType::LAUNCH_TYPE_PAGE:
+                    $this->ctrl->setParameterByClass('ilPCExternalContentGUI', 'settings_id', $settings->getSettingsId());
+                    $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentGUI'], 'viewPage');
 
-            case ilExternalContentType::LAUNCH_TYPE_EMBED:
-            default:
-                $html .= $renderer->render();
-                break;
+                    $html .= '<p><a href="' . $url . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a></p>';
+                    break;
+
+                case ilExternalContentType::LAUNCH_TYPE_EMBED:
+                default:
+                    $html .= $renderer->render();
+                    break;
+            }
+        }
+		elseif (!empty($a_properties['error'])) {
+		    // fallback if import failed with an error message
+		    $html .= '<p>' . $a_properties['error'] . '</p>';
         }
 
-		if(!empty($description)) {
+		if(!empty($a_properties['description'])) {
 		    // style taken from media object
-        	$html .= '<figcaption><strong>'.$description."</strong></figcaption>";
+        	$html .= '<figcaption><strong>'.$a_properties['description']."</strong></figcaption>";
 		}
 
 		return $html;

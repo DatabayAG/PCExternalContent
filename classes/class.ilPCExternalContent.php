@@ -11,7 +11,7 @@ require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/
 require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
 /**
  * Representation of the page content for the ExternalContent plugin
- * This object is delivered ilExternalContentRenderer
+ * This object is delivered to ilExternalContentRenderer
  */
 class ilPCExternalContent implements ilExternalContent
 {

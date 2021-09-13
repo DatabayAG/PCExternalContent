@@ -7,6 +7,8 @@
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
 
+require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
+
 /**
  * Exporter class for the PCExternalContent Plugin
  */
@@ -42,8 +44,13 @@ class ilPCExternalContentExporter extends ilPageComponentPluginExporter
 	public function getXmlRepresentation($a_entity, $a_schema_version, $a_id)
 	{
 		$properties = self::getPCProperties($a_id);
-		// TODO: get the settings (with input values) for the settings_id stored in the properties
-        // TODO: create an XML structure from it
+        if (isset($properties['settings_id'])) {
+            $settings = new ilExternalContentSettings($properties['settings_id']);
+            return $settings->getXML();
+        }
+        else {
+            return '';
+        }
 	}
 
 	/**

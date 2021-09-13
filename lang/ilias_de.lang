@@ -11,3 +11,4 @@ edit_input_field#:#Externen Inhalt bearbeiten
 content_plugin_version#:#Inhalt zuletzt bearbeitet mit Version
 description_info#:#Die Beschreibung wird als Legende unter dem eingebetteten Inhalt angezeigt.
 launch_content#:#Externen Inhalt anzeigen
+error_at_import#:#Beim Importieren des Inhalts trat der folgende Fehler auf:

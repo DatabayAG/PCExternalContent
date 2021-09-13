@@ -14,7 +14,10 @@ require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/
  */
 class ilPCExternalContentPlugin extends ilPageComponentPlugin
 {
-	/**
+    /** @var self */
+    protected static $instance;
+
+    /**
 	 * Get plugin name 
 	 *
 	 * @return string
@@ -34,32 +37,43 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 	{
 		// TODO: test with these page types, add other types if possible, e.g. 'gdf'
 		return in_array($a_parent_type, [
-//		      'blp',      // Blog
-//            'copa',     // Content Page
-//            'lobj',     // Learning Objective
-//            'dcpf',     // Data Collection Detailed View
-//            'gdf',      // Glossary Definition
+		    'blp',      // Blog
+            'copa',     // Content Page
+            'lobj',     // Learning Objective
+            'dcpf',     // Data Collection Detailed View
+            'gdf',      // Glossary Definition
             'lm',       // Learning Module
-//            'mep',      // Media Pool
-//            'prtf',     // Portfolio
-//            'prtt',     // Portfolio Template
-//            'sahs',     // Scorm Learning Module
+            'mep',      // Media Pool
+            'prtf',     // Portfolio
+            'prtt',     // Portfolio Template
+            'sahs',     // Scorm Learning Module
 //            'qht',      // Test Question Hint
 //            'qpl',      // Test Question
 //            'qfbg',     // Test Question General Feedback
 //            'qfbs',     // Test Question Specific Feedback
-//            'wpg',      // Wiki
-//            'auth',     // Login
+            'wpg',      // Wiki
+            'auth',     // Login
             'cont',     // Container (Category, Course, Group, Folder)
-//            'cstr',     // Container Start Objects
+            'cstr',     // Container Start Objects
 //            'stys',     // Page Layout
-//            'impr',     // Imprint
+            'impr',     // Imprint
 
         ]);
 	}
 
+    /**
+     * Get the plugin instance
+     * @return self
+     */
+    public static function getInstance() {
+        if (!isset(self::$instance)) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
 
-	/**
+
+    /**
 	 * Handle an event
 	 * @param string	$a_component
 	 * @param string	$a_event
