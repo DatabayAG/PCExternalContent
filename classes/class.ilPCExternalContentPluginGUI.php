@@ -22,7 +22,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	/** @var  ilCtrl $ctrl */
 	protected $ctrl;
 
-	/** @var  ilTemplate $tpl */
+	/** @var  ilGlobalTemplate $tpl */
 	protected $tpl;
 
 	/** @var ilPCExternalContentPlugin */
