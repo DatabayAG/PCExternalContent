@@ -2,7 +2,7 @@
 Copyright (c) 2022 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
 GPLv3, see LICENSE
 
-**Further maintenance is provided by [Databay AG](https://www.databay.de).**
+**Further maintenance can be offered by [Databay AG](https://www.databay.de).**
 
 This plugin allows the use of external contents (e.g. via LTI 1.1) on ILIAS content pages.
 NOTE: You must install the [ExternalContent](https://github.com/DatabayAG/ExternalContent) plugin before you can use this plugin.
