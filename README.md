@@ -2,19 +2,18 @@
 Copyright (c) 2022 Institut fuer Lern-Innovation, Friedrich-Alexander-Universitaet Erlangen-Nuernberg
 GPLv3, see LICENSE
 
-Author: Fred Neumann <fred.neumann@fau.de>, Cornel Musielak <cornel.musielak@fau.de>
+**Further maintenance is provided by [Databay AG](https://www.databay.de).**
 
 This plugin allows the use of external contents (e.g. via LTI 1.1) on ILIAS content pages.
-NOTE: You must install the [ExternalContent](https://github.com/ilifau/ExternalContent) plugin before you can use this plugin.
+NOTE: You must install the [ExternalContent](https://github.com/DatabayAG/ExternalContent) plugin before you can use this plugin.
 
 # INSTALLATION
 
 1. Put the content of the plugin directory in a subdirectory under your ILIAS main directory:
 Customizing/global/plugins/Services/COPage/PageComponent/PCExternalContent
-
-2. Open ILIAS > Administration > Plugins
-
-3. Update/Activate the Plugin.
+2. Run `composer du` in the main directory of your ILIAS installation
+3. Go to Administration > Extending ILIAS > Plugins
+4. Install and activate the plugin.
 
 # Usage
 
