@@ -25,3 +25,7 @@ Customizing/global/plugins/Services/COPage/PageComponent/PCExternalContent
 * View the presentation of the page.
 
 Depending on the settings of the chosen external content type the page will present a link to the content or embed it directly.
+
+# Versions
+
+Plugin versions for different ILIAS releases are provided in separate branches of this repository.
