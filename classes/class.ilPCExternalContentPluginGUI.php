@@ -7,10 +7,6 @@
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
 
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentRenderer.php');
-require_once(__DIR__ . '/class.ilPCExternalContent.php');
 /**
  * External Content Page Component GUI
  *
@@ -22,11 +18,11 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	/** @var  ilCtrl $ctrl */
 	protected $ctrl;
 
-	/** @var  ilGlobalTemplate $tpl */
+	/** @var  ilGlobalTemplateInterface $tpl */
 	protected $tpl;
 
 	/** @var ilPCExternalContentPlugin */
-	protected $plugin;
+	protected ilPageComponentPlugin $plugin;
 
 	/**
 	 * ilPCExternalContentPluginGUI constructor.
@@ -44,27 +40,21 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	/**
 	 * Execute command
 	 */
-	public function executeCommand()
+	public function executeCommand(): void
 	{
-		$next_class = $this->ctrl->getNextClass();
-		switch($next_class)
-		{
-			default:
-				// perform valid commands
-				$cmd = $this->ctrl->getCmd();
-				if (in_array($cmd, array("create", "save", "edit", "update", "cancel", "viewPage")))
-				{
-					$this->$cmd();
-				}
-				break;
-		}
+        // perform valid commands
+        $cmd = $this->ctrl->getCmd();
+        if (in_array($cmd, array("create", "save", "edit", "update", "cancel", "viewPage")))
+        {
+            $this->$cmd();
+        }
 	}
 	
 	
 	/**
 	 * Create
 	 */
-	public function insert()
+	public function insert(): void
 	{
 		$form = $this->initForm(true);
 		$this->tpl->setContent($form->getHTML());
@@ -73,14 +63,14 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	/**
 	 * Save new pc example element
 	 */
-	public function create()
+	public function create(): void
 	{
 		$form = $this->initForm(true);
 
 		if ($form->checkInput()) {
             if (!empty($_POST['type_details'])) {
                 if ($this->saveForm($form, true)) {
-                    ilUtil::sendSuccess($this->lng->txt("msg_obj_created"), true);
+                    $this->tpl->setOnScreenMessage('success', $this->lng->txt("msg_obj_created"), true);
                     $this->returnToParent();
                 }
                 $form->setValuesByPost();
@@ -92,7 +82,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	/**
 	 * Init the properties form and load the stored values
 	 */
-	public function edit()
+	public function edit(): void
 	{
         $form = $this->initForm(false);
 		$this->tpl->setContent($form->getHTML());
@@ -106,7 +96,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 		$form = $this->initForm(false);
 		if ($form->checkInput()) {
 		    if ($this->saveForm($form, false)) {
-                ilUtil::sendSuccess($this->lng->txt("msg_obj_modified"), true);
+                $this->tpl->setOnScreenMessage('success', $this->lng->txt("msg_obj_modified"), true);
                 $this->returnToParent();
             }
 		}
@@ -288,10 +278,14 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 	/**
 	 * Get HTML for element
 	 *
-	 * @param string    page mode (edit, presentation, print, preview, offline)
+	 * @param string  $a_mode  page mode (edit, presentation, print, preview, offline)
 	 * @return string   html code
 	 */
-	public function getElementHTML($a_mode, array $a_properties, $a_plugin_version)
+	public function getElementHTML(
+        string $a_mode,
+        array $a_properties,
+        string $plugin_version
+    ): string
 	{
 	    $html = '';
 
@@ -315,7 +309,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                     $this->ctrl->setParameterByClass('ilPCExternalContentGUI', 'settings_id', $settings->getSettingsId());
                     $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentGUI'], 'viewPage');
 
-                    $html .= '<p><a href="' . $url . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a></p>';
+                    $html .= '<p><a href="' . $url . '" target="_blank">' .  $this->plugin->txt('launch_content') . '</a></p>';
                     break;
 
                 case ilExternalContentType::LAUNCH_TYPE_EMBED:

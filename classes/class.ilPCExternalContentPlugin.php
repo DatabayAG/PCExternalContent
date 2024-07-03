@@ -6,8 +6,6 @@
  * @author Fred Neumann <fred.neumann@fau.de>
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
 
 /**
  * External Content Page Component plugin
@@ -17,15 +15,6 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
     /** @var self */
     protected static $instance;
 
-    /**
-	 * Get plugin name 
-	 *
-	 * @return string
-	 */
-	function getPluginName()
-	{
-		return "PCExternalContent";
-	}
 
 	/**
 	 * Check if parent type is valid
@@ -33,10 +22,10 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 	 * @see PCExternalContent::getReturnUrl()
 	 * @return string
 	 */
-	function isValidParentType($a_parent_type)
+	function isValidParentType(string $a_type): bool
 	{
 		// TODO: test with these page types, add other types if possible, e.g. 'gdf'
-		return in_array($a_parent_type, [
+		return in_array($a_type, [
 		    'blp',      // Blog
             'copa',     // Content Page
             'lobj',     // Learning Objective
@@ -66,8 +55,11 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
      * @return self
      */
     public static function getInstance() {
+        global $DIC;
         if (!isset(self::$instance)) {
-            self::$instance = new self();
+            /** @var ilComponentFactory $factory */
+            $factory = $DIC["component.factory"];
+            self::$instance = $factory->getPlugin('pcxxco');
         }
         return self::$instance;
     }
@@ -89,7 +81,10 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 	 * @param array 	$a_properties		properties saved in the page, (should be modified if neccessary)
 	 * @param string	$a_plugin_version	plugin version of the properties
 	 */
-	public function onClone(&$a_properties, $a_plugin_version)
+	public function onClone(
+        array &$a_properties,
+        string $a_plugin_version
+    ): void
 	{
 		$settings_id = $a_properties['settings_id'];
 		if (!empty($settings_id))
@@ -109,7 +104,11 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
 	 * @param array 	$a_properties		properties saved in the page (will be deleted afterwards)
 	 * @param string	$a_plugin_version	plugin version of the properties
 	 */
-	public function onDelete($a_properties, $a_plugin_version)
+	public function onDelete(
+        array $a_properties,
+        string $a_plugin_version,
+        bool $move_operation = false
+    ): void
 	{
 		$settings_id = $a_properties['settings_id'];
 		if (!empty($settings_id))

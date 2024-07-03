@@ -7,8 +7,6 @@
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
 
-require_once(__DIR__ . '/class.ilPCExternalContentPlugin.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
 
 /**
  * Importer class for the PCExternalContent Plugin
@@ -19,7 +17,7 @@ class ilPCExternalContentImporter extends ilPageComponentPluginImporter
     protected $plugin;
 
 
-	public function init()
+	public function init(): void
 	{
 	    $this->plugin = ilPCExternalContentPlugin::getInstance();
 	}
@@ -33,7 +31,12 @@ class ilPCExternalContentImporter extends ilPageComponentPluginImporter
 	 * @param	string			$a_xml
 	 * @param	ilImportMapping	$a_mapping
 	 */
-	public function importXmlRepresentation($a_entity, $a_id, $a_xml, $a_mapping)
+	public function importXmlRepresentation(
+        string $a_entity,
+        string $a_id,
+        string $a_xml,
+        ilImportMapping $a_mapping
+    ): void
 	{
 		$new_id = self::getPCMapping($a_id, $a_mapping);
 

@@ -6,9 +6,7 @@
  * @author Fred Neumann <fred.neumann@fau.de>
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/interface.ilExternalContent.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
+
 /**
  * Representation of the page content for the ExternalContent plugin
  * This object is delivered to ilExternalContentRenderer
@@ -149,6 +147,7 @@ class ilPCExternalContent implements ilExternalContent
                 return ilLink::_getStaticLink($this->getRefId());
 
         }
+        return ilLink::_getStaticLink($this->getRefId());
     }
 
     /**
