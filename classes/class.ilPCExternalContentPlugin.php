@@ -77,7 +77,10 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
             $old_settings = new ilExternalContentSettings($settings_id);
             $new_settings = new ilExternalContentSettings();
             $old_settings->clone($new_settings);
-            $new_settings->setObjId($this->getParentId());
+            // unfortunately the parent id is still the one of the old object
+            // we don't have a clean way to the get the ovj_id of the new object here
+            // so better don't save an obj_id in the copied settings - it is not used
+            // $new_settings->setObjId($this->getParentId());
             $new_settings->save();
             $a_properties['settings_id'] = $new_settings->getSettingsId();
         }
