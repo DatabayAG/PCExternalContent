@@ -255,10 +255,11 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                     break;
 
                 case ilExternalContentType::LAUNCH_TYPE_PAGE:
-                    $this->ctrl->setParameterByClass('ilPCExternalContentGUI', 'settings_id', $settings->getSettingsId());
-                    $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentGUI'], 'viewPage');
+                    $this->ctrl->saveParameterByClass('ilPCExternalContentPluginGUI', 'ref_id');
+                    $this->ctrl->setParameterByClass('ilPCExternalContentPluginGUI', 'settings_id', $settings->getSettingsId());
+                    $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentPluginGUI'], 'viewPage');
 
-                    $html .= '<p><a href="' . $url . '" target="_blank">' . $this->plugin->txt('launch_content') . '</a></p>';
+                    $html .= '<p><a href="' . $url . '">' . $this->plugin->txt('launch_content') . '</a></p>';
                     break;
 
                 case ilExternalContentType::LAUNCH_TYPE_EMBED:
@@ -284,8 +285,8 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
      */
     public function viewPage(): void
     {
-        $properties = $this->getProperties();
-        $content = new ilPCExternalContent($this->plugin, $properties['settings_id']);
+        $settings_id = $this->http->wrapper()->query()->retrieve('settings_id', $this->refinery->kindlyTo()->int());
+        $content = new ilPCExternalContent(ilPCExternalContentPlugin::getInstance(), $settings_id);
         $renderer = new ilExternalContentRenderer($content);
         $renderer->render();
 
