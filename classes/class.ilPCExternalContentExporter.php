@@ -49,14 +49,14 @@ class ilPCExternalContentExporter extends ilPageComponentPluginExporter
 
     public function getValidSchemaVersions(string $a_entity): array
     {
-        return array(
-            '5.3.0' => array(
+        return [
+            '5.3.0' => [                                    // schema version
                 'namespace' => 'http://www.ilias.de/',
                 //'xsd_file'     => 'pctpc_5_3.xsd',
                 'uses_dataset' => false,
-                'min' => '0.0.0',
-                'max' => '1.0.0'
-            )
-        );
+                'min' => '9.0.0',                           // min. ILIAS version
+                'max' => '9.999.0'                          // max. ILIAS version
+            ]
+        ];
     }
 }
