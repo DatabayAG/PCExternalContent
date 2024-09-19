@@ -59,7 +59,12 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function getRefId(): int
     {
-        return $this->http->wrapper()->query()->retrieve('ref_id', $this->refinery->kindlyTo()->int());
+        if ($this->http->wrapper()->query()->has('ref_id')) {
+            return $this->http->wrapper()->query()->retrieve('ref_id', $this->refinery->kindlyTo()->int());
+        }
+
+        // take root as default, just in case. This is used to create a return URL for the tool
+        return 1;
     }
 
     /**
@@ -118,19 +123,6 @@ class ilPCExternalContent implements ilExternalContent
      */
     public function getReturnUrl(): string
     {
-        // the return url is the URL of the content page on which the content is displayed
-        // it depends on the page type
-        switch ($this->plugin->getParentType()) {
-            // container page, content page
-            case 'cont':
-            case 'copa':
-                return ilLink::_getStaticLink($this->getRefId());
-
-            case 'lm':
-                // TODO: better link to the specific page in the learning module
-                return ilLink::_getStaticLink($this->getRefId());
-
-        }
         return ilLink::_getStaticLink($this->getRefId());
     }
 
