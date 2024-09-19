@@ -121,7 +121,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
             foreach ($settings->getInputValues() as $field_name => $field_value) {
                 $values['field_' . $field_name] = $field_value;
             }
-        } elseif($this->http->wrapper()->post()->has('type_id')) {
+        } elseif ($this->http->wrapper()->post()->has('type_id')) {
             $type_id = $this->http->wrapper()->post()->retrieve('type_id', $this->refinery->kindlyTo()->int());
             if (!empty($type_id)) {
                 // type is already chosen in first create step, content is not yet saved
