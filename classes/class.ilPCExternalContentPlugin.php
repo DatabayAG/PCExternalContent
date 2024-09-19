@@ -6,38 +6,24 @@
  * @author Fred Neumann <fred.neumann@fau.de>
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
 
 /**
  * External Content Page Component plugin
  */
 class ilPCExternalContentPlugin extends ilPageComponentPlugin
 {
-    /** @var self */
-    protected static $instance;
+    protected static self $instance;
 
     /**
-	 * Get plugin name 
-	 *
-	 * @return string
-	 */
-	function getPluginName()
-	{
-		return "PCExternalContent";
-	}
-
-	/**
-	 * Check if parent type is valid
+     * Check if parent type is valid
      * @see getParentType() of classes extending ilPageObject
-	 * @see PCExternalContent::getReturnUrl()
-	 * @return string
-	 */
-	function isValidParentType($a_parent_type)
-	{
-		// TODO: test with these page types, add other types if possible, e.g. 'gdf'
-		return in_array($a_parent_type, [
-		    'blp',      // Blog
+     * @see ilPCExternalContent::getReturnUrl()
+     * @return string
+     */
+    public function isValidParentType(string $a_type): bool
+    {
+        return in_array($a_type, [
+            'blp',      // Blog
             'copa',     // Content Page
             'lobj',     // Learning Objective
             'dcpf',     // Data Collection Detailed View
@@ -47,75 +33,73 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
             'prtf',     // Portfolio
             'prtt',     // Portfolio Template
             'sahs',     // Scorm Learning Module
-//            'qht',      // Test Question Hint
-//            'qpl',      // Test Question
-//            'qfbg',     // Test Question General Feedback
-//            'qfbs',     // Test Question Specific Feedback
             'wpg',      // Wiki
             'auth',     // Login
             'cont',     // Container (Category, Course, Group, Folder)
             'cstr',     // Container Start Objects
-//            'stys',     // Page Layout
             'impr',     // Imprint
-
         ]);
-	}
+    }
 
     /**
      * Get the plugin instance
      * @return self
      */
-    public static function getInstance() {
+    public static function getInstance(): self
+    {
+        global $DIC;
         if (!isset(self::$instance)) {
-            self::$instance = new self();
+            /** @var ilComponentFactory $factory */
+            $factory = $DIC["component.factory"];
+
+            /** @var self  $instance */
+            $instance = $factory->getPlugin('pcxxco');
+            self::$instance = $instance;
         }
         return self::$instance;
     }
 
+    /**
+     * Handle an event
+     */
+    public function handleEvent(string $a_component, string $a_event, array $a_parameter): void
+    {
+        // nothing to do here yet
+    }
 
     /**
-	 * Handle an event
-	 * @param string	$a_component
-	 * @param string	$a_event
-	 * @param mixed		$a_parameter
-	 */
-	public function handleEvent($a_component, $a_event, $a_parameter)
-	{
-		// nothing to do here yet
-	}
+     * This function is called when the page content is cloned
+     */
+    public function onClone(
+        array &$a_properties,
+        string $a_plugin_version
+    ): void {
+        $settings_id = $a_properties['settings_id'] ?? null;
+        if (!empty($settings_id)) {
+            $old_settings = new ilExternalContentSettings($settings_id);
+            $new_settings = new ilExternalContentSettings();
+            $old_settings->clone($new_settings);
+            // unfortunately the parent id is still the one of the old object
+            // we don't have a clean way to the get the ovj_id of the new object here
+            // so better don't save an obj_id in the copied settings - it is not used
+            // $new_settings->setObjId($this->getParentId());
+            $new_settings->save();
+            $a_properties['settings_id'] = $new_settings->getSettingsId();
+        }
+    }
 
-	/**
-	 * This function is called when the page content is cloned
-	 * @param array 	$a_properties		properties saved in the page, (should be modified if neccessary)
-	 * @param string	$a_plugin_version	plugin version of the properties
-	 */
-	public function onClone(&$a_properties, $a_plugin_version)
-	{
-		$settings_id = $a_properties['settings_id'];
-		if (!empty($settings_id))
-		{
-		    $oldSettings = new ilExternalContentSettings($settings_id);
-		    $newSettings = new ilExternalContentSettings();
-            $oldSettings->clone($newSettings);
-            $newSettings->setObjId($this->getParentId());
-            $newSettings->save();
-            $a_properties['settings_id'] = $newSettings->getSettingsId();
-		}
-	}
-
-
-	/**
-	 * This function is called before the page content is deleted
-	 * @param array 	$a_properties		properties saved in the page (will be deleted afterwards)
-	 * @param string	$a_plugin_version	plugin version of the properties
-	 */
-	public function onDelete($a_properties, $a_plugin_version)
-	{
-		$settings_id = $a_properties['settings_id'];
-		if (!empty($settings_id))
-		{
-            $exco_settings = new ilExternalContentSettings($settings_id);
-            $exco_settings->delete();
-		}
-	}
+    /**
+     * This function is called before the page content is deleted
+     */
+    public function onDelete(
+        array $a_properties,
+        string $a_plugin_version,
+        bool $move_operation = false
+    ): void {
+        $settings_id = $a_properties['settings_id'] ?? null;
+        if (!empty($settings_id)) {
+            $settings = new ilExternalContentSettings($settings_id);
+            $settings->delete();
+        }
+    }
 }

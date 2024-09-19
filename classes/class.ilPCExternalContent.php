@@ -6,111 +6,100 @@
  * @author Fred Neumann <fred.neumann@fau.de>
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/interface.ilExternalContent.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
+
+use ILIAS\HTTP\GlobalHttpState;
+use ILIAS\Refinery\Factory as Refinery;
+
 /**
  * Representation of the page content for the ExternalContent plugin
  * This object is delivered to ilExternalContentRenderer
  */
 class ilPCExternalContent implements ilExternalContent
 {
-    /** @var ilPCExternalContentPlugin */
-    protected $plugin;
-
-    /** @var ilExternalContentSettings */
-    protected $settings;
-
-    /** @var ilExternalContentSettings */
-    protected $type;
-
-    /** @var string */
-    protected $return_url;
+    protected ilTree $tree;
+    protected GlobalHttpState $http;
+    protected Refinery $refinery;
+    protected ilPCExternalContentPlugin $plugin;
+    protected ilExternalContentSettings $settings;
 
     /**
-     * array for context information, will be setup in getContext()
-     * @var array
+     * Array for context information, will be setup in getContext()
+     * @var array{id: int, title: string, type: string}|null
      */
-    protected $context = array();
+    protected ?array $context = null;
 
-    /**
-     * ilPCExternalContent constructor
-     * @param ilPCExternalContentPlugin $plugin;
-     * @param int $settings_id
-     */
-    public function __construct($plugin, $settings_id)
+    public function __construct(ilPCExternalContentPlugin $plugin, int $settings_id)
     {
+        global $DIC;
+        $this->tree = $DIC->repositoryTree();
+        $this->http = $DIC->http();
+        $this->refinery = $DIC->refinery();
         $this->settings = new ilExternalContentSettings($settings_id);
         $this->plugin = $plugin;
     }
 
     /**
      * Get the settings object
-     * @return ilExternalContentSettings
      */
-    public function getSettings()
+    public function getSettings(): ilExternalContentSettings
     {
         return $this->settings;
     }
 
     /**
      * Get the object id of the parent object (learning module, content page)
-     * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->plugin->getParentId();
     }
 
-
     /**
      * Get the reference id of the parent object (learning module, content page)
-     * @return int
      */
-    public function getRefId()
+    public function getRefId(): int
     {
-        return $_GET['ref_id'];
+        if ($this->http->wrapper()->query()->has('ref_id')) {
+            return $this->http->wrapper()->query()->retrieve('ref_id', $this->refinery->kindlyTo()->int());
+        }
+
+        // take root as default, just in case. This is used to create a return URL for the tool
+        return 1;
     }
 
     /**
      * Get the title of the parent object (learning module, content page)
-     * @return string
      */
-    public function getTitle()
+    public function getTitle(): string
     {
         return ilObject::_lookupTitle($this->getId());
     }
 
     /**
      * Get the description of the parent object (learning module, content page)
-     * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return ilObject::_lookupDescription($this->getId());
     }
 
     /**
      * Get the higher context (course or group of the parent object)
-     * @return array
+     * @return array{id: int, title: string, type: string}
      */
-    public function getContext()
+    public function getContext(): array
     {
         /** @see ilObjExternalContent::getContext() */
         $valid_types = array('crs', 'grp', 'cat', 'root');
-        global $DIC;
-        $tree = $DIC->repositoryTree();
-        if (!isset($this->context)) {
-            $this->context = array();
-            $path = array_reverse($tree->getPathFull($this->getRefId()));
-            foreach ($path as $key => $row)
-            {
-                if (in_array($row['type'], $valid_types))
-                {
-                    if (in_array($row['type'], array('cat', 'root')) && !empty($this->context))
+        if ($this->context === null) {
+            $this->context = [];
+            $path = array_reverse($this->tree->getPathFull($this->getRefId()));
+            foreach ($path as $key => $row) {
+                if (in_array($row['type'], $valid_types)) {
+                    if (in_array($row['type'], array('cat', 'root')) && !empty($this->context)) {
                         break;
-
-                    $this->context['id'] = $row['child'];
+                    }
+                    $this->context['id'] = (int) $row['child'];
                     $this->context['title'] = $row['title'];
                     $this->context['type'] = $row['type'];
                 }
@@ -122,9 +111,8 @@ class ilPCExternalContent implements ilExternalContent
     /**
      * Get a suffix (e.g. 'autostart' provided with a goto link
      * not relevant for page content
-     * @return string
      */
-    public function getGotoSuffix()
+    public function getGotoSuffix(): string
     {
         return '';
     }
@@ -132,32 +120,18 @@ class ilPCExternalContent implements ilExternalContent
     /**
      * Get the goto link of the page
      * An external content opened in the same browser window will return to this page
-     * @return string
      */
-    public function getReturnUrl()
+    public function getReturnUrl(): string
     {
-        // the return url is the URL of the content page on which the content is displayed
-        // it depends on the page type
-        switch ($this->plugin->getParentType()) {
-            // container page, content page
-            case 'cont':
-            case 'copa':
-                return ilLink::_getStaticLink($this->getRefId());
-
-            case 'lm':
-                // TODO: better link to the specific page in the learning module
-                return ilLink::_getStaticLink($this->getRefId());
-
-        }
+        return ilLink::_getStaticLink($this->getRefId());
     }
 
     /**
      * Get the url for receiving results
-     * @return string
      */
-    public function getResultUrl()
+    public function getResultUrl(): string
     {
-        // Page components don't have an learning progress
+        // Page components don't have a learning progress
         // Therefore receiving results is not supported
         return '';
     }

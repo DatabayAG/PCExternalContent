@@ -7,10 +7,10 @@
  * @author Cornel Musielak <cornel.musielak@fau.de>
  */
 
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentSettings.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentType.php');
-require_once('./Customizing/global/plugins/Services/Repository/RepositoryObject/ExternalContent/classes/class.ilExternalContentRenderer.php');
-require_once(__DIR__ . '/class.ilPCExternalContent.php');
+use ILIAS\HTTP\GlobalHttpState;
+use ILIAS\Refinery\Factory as Refinery;
+use ILIAS\Filesystem\Stream\Streams;
+
 /**
  * External Content Page Component GUI
  *
@@ -19,121 +19,96 @@ require_once(__DIR__ . '/class.ilPCExternalContent.php');
  */
 class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 {
-	/** @var  ilCtrl $ctrl */
-	protected $ctrl;
+    protected GlobalHttpState $http;
+    protected Refinery $refinery;
+    protected ilCtrl $ctrl;
+    protected ilGlobalTemplateInterface $tpl;
 
-	/** @var  ilGlobalTemplate $tpl */
-	protected $tpl;
+    /** @var ilPCExternalContentPlugin */
+    protected ilPageComponentPlugin $plugin;
 
-	/** @var ilPCExternalContentPlugin */
-	protected $plugin;
-
-	/**
-	 * ilPCExternalContentPluginGUI constructor.
-	 */
-	public function __construct()
-	{
-		global $DIC;
+    public function __construct()
+    {
+        global $DIC;
+        $this->http = $DIC->http();
+        $this->refinery = $DIC->refinery();
         $this->ctrl = $DIC->ctrl();
         $this->tpl = $DIC->ui()->mainTemplate();
 
-		parent::__construct();
-	}
+        parent::__construct();
+    }
 
+    /**
+     * Execute command
+     */
+    public function executeCommand(): void
+    {
+        // perform valid commands
+        $cmd = $this->ctrl->getCmd();
+        if (in_array($cmd, ["create", "save", "edit", "update", "cancel", "viewPage"])) {
+            $this->$cmd();
+        }
+    }
 
-	/**
-	 * Execute command
-	 */
-	public function executeCommand()
-	{
-		$next_class = $this->ctrl->getNextClass();
-		switch($next_class)
-		{
-			default:
-				// perform valid commands
-				$cmd = $this->ctrl->getCmd();
-				if (in_array($cmd, array("create", "save", "edit", "update", "cancel", "viewPage")))
-				{
-					$this->$cmd();
-				}
-				break;
-		}
-	}
-	
-	
-	/**
-	 * Create
-	 */
-	public function insert()
-	{
-		$form = $this->initForm(true);
-		$this->tpl->setContent($form->getHTML());
-	}
-	
-	/**
-	 * Save new pc example element
-	 */
-	public function create()
-	{
-		$form = $this->initForm(true);
+    /**
+     * Show the form add a new page content
+     */
+    public function insert(): void
+    {
+        $form = $this->initForm(true);
+        $this->tpl->setContent($form->getHTML());
+    }
 
-		if ($form->checkInput()) {
-            if (!empty($_POST['type_details'])) {
+    /**
+     * Save the new page content
+     */
+    public function create(): void
+    {
+        $form = $this->initForm(true);
+        if ($form->checkInput()) {
+            if ($this->http->wrapper()->post()->has('type_details')) {
                 if ($this->saveForm($form, true)) {
-                    ilUtil::sendSuccess($this->lng->txt("msg_obj_created"), true);
+                    $this->tpl->setOnScreenMessage('success', $this->lng->txt("msg_obj_created"), true);
                     $this->returnToParent();
                 }
                 $form->setValuesByPost();
             }
         }
-		$this->tpl->setContent($form->getHtml());
-	}
-	
-	/**
-	 * Init the properties form and load the stored values
-	 */
-	public function edit()
-	{
-        $form = $this->initForm(false);
-		$this->tpl->setContent($form->getHTML());
-	}
-	
-	/**
-	 * Update
-	 */
-	public function update()
-	{
-		$form = $this->initForm(false);
-		if ($form->checkInput()) {
-		    if ($this->saveForm($form, false)) {
-                ilUtil::sendSuccess($this->lng->txt("msg_obj_modified"), true);
-                $this->returnToParent();
-            }
-		}
-		$form->setValuesByPost();
-		$this->tpl->setContent($form->getHtml());
-	}
-
-    /**
-     * View Page
-     */
-    public function viewPage()
-    {
-        $properties = $this->getProperties();
-        $content = new ilPCExternalContent($this->plugin, $properties['settings_id']);
-        $renderer = new ilExternalContentRenderer($content);
-        $renderer->render();
+        $this->tpl->setContent($form->getHtml());
     }
 
+    /**
+     * Init the properties form and load the stored values
+     */
+    public function edit(): void
+    {
+        $form = $this->initForm(false);
+        $this->tpl->setContent($form->getHTML());
+    }
 
-	/**
-	 * Init creation editing form
-	 * @param  bool        $a_create        true: create component, false: edit component
-     * @see \ilObjExternalContentGUI::initForm()
-	 */
-	protected function initForm($a_create = false)
-	{
-	    // settings values
+    /**
+     * Show the form to update the page content
+     */
+    public function update()
+    {
+        $form = $this->initForm(false);
+        if ($form->checkInput()) {
+            if ($this->saveForm($form, false)) {
+                $this->tpl->setOnScreenMessage('success', $this->lng->txt("msg_obj_modified"), true);
+                $this->returnToParent();
+            }
+        }
+        $form->setValuesByPost();
+        $this->tpl->setContent($form->getHtml());
+    }
+
+    /**
+     * Init the properties form
+     * @see ilObjExternalContentGUI::initForm()
+     */
+    protected function initForm(bool $a_create = false): ilPropertyFormGUI
+    {
+        // external content settings values
         $values = [];
 
         // page content properties
@@ -141,40 +116,38 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
 
         if (!empty($properties['settings_id'])) {
             // content is already saved, type and settings data exist
-
             $settings = new ilExternalContentSettings($properties['settings_id']);
             $type = $settings->getTypeDef();
             foreach ($settings->getInputValues() as $field_name => $field_value) {
                 $values['field_' . $field_name] = $field_value;
             }
-        }
-        elseif(!empty($_POST['type_id'])) {
-            // type is already chosen in first create step, content is not yet saved
-            $type = new ilExternalContentType((int) $_POST['type_id']);
+        } elseif ($this->http->wrapper()->post()->has('type_id')) {
+            $type_id = $this->http->wrapper()->post()->retrieve('type_id', $this->refinery->kindlyTo()->int());
+            if (!empty($type_id)) {
+                // type is already chosen in first create step, content is not yet saved
+                $type = new ilExternalContentType((int) $_POST['type_id']);
+            }
         }
 
-	    $form = new ilPropertyFormGUI();
+        $form = new ilPropertyFormGUI();
 
-		if (!isset($type)) {
+        if (!isset($type)) {
             // type has to be chosen first before anything is saved
             $item = new ilRadioGroupInputGUI($this->lng->txt('type'), 'type_id');
             $item->setRequired(true);
             $types = ilExternalContentType::_getTypesData(false, ilExternalContentType::AVAILABILITY_CREATE);
-            foreach ($types as $type)
-            {
+            foreach ($types as $type) {
                 $option = new ilRadioOption($type['title'], $type['type_id'], $type['description']);
                 $item->addOption($option);
             }
             $form->addItem($item);
-		}
-		else {
-		    $item = new ilHiddenInputGUI('type_id');
-		    $item->setValue($type->getTypeId());
+        } else {
+            $item = new ilHiddenInputGUI('type_id');
+            $item->setValue($type->getTypeId());
             $form->addItem($item);
 
             // content is saved if this item exists in the posted values
             $item = new ilNonEditableValueGUI($this->lng->txt('type'), 'type_details');
-            //$item->setDisabled(true);
             $item->setValue($type->getTitle());
             $item->setInfo($type->getDescription());
             $form->addItem($item);
@@ -200,122 +173,93 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
             $type->addFormElements($form, $values);
         }
 
-		if ($a_create) {
+        if ($a_create) {
             $this->addCreationButton($form);
             $form->addCommandButton("cancel", $this->lng->txt("cancel"));
             $form->setTitle($this->plugin->txt('cmd_insert'));
             $form->setFormAction($this->ctrl->getFormAction($this, 'create'));
-        }
-		else {
-			$form->addCommandButton("update", $this->lng->txt("save"));
-			$form->addCommandButton("cancel", $this->lng->txt("cancel"));
-			$form->setTitle($this->plugin->txt('edit_input_field'));
+        } else {
+            $form->addCommandButton("update", $this->lng->txt("save"));
+            $form->addCommandButton("cancel", $this->lng->txt("cancel"));
+            $form->setTitle($this->plugin->txt('edit_input_field'));
             $form->setFormAction($this->ctrl->getFormAction($this, 'update'));
-		}
+        }
 
-		return $form;
-	}
-
+        return $form;
+    }
 
     /**
-     * Save the form values
-     * @param ilPropertyFormGUI $form
-     * @param bool $a_create
-     * @return bool success
+     * Save the entered form values
      */
-	protected function saveForm($form, $a_create)
-	{
+    protected function saveForm(ilPropertyFormGUI $form, bool $a_create): bool
+    {
         $properties = $this->getProperties();
         $properties['title'] = $form->getInput('title');
         $properties['description'] = $form->getInput('description');
 
         if ($a_create) {
-            $exco_settings = new ilExternalContentSettings();
-            $exco_settings->setTypeId($form->getInput('type_id'));
-            $exco_settings->setObjId($this->plugin->getParentId());
-            foreach ($exco_settings->getTypeDef()->getFormValues($form) as $field_name => $field_value) {
-                $exco_settings->setInputValue($field_name, $field_value);
+            $settings = new ilExternalContentSettings();
+            $settings->setTypeId($form->getInput('type_id'));
+            $settings->setObjId($this->plugin->getParentId());
+            foreach ($settings->getTypeDef()->getFormValues($form) as $field_name => $field_value) {
+                $settings->setInputValue($field_name, $field_value);
             }
-            $exco_settings->save(); // this creates the settings id
+            $settings->save(); // this creates the settings id
 
-            $properties['settings_id'] = $exco_settings->getSettingsId();
+            $properties['settings_id'] = $settings->getSettingsId();
             return $this->createElement($properties);
-        }
-        else {
-            $exco_settings = new ilExternalContentSettings($properties['settings_id']);
-            $exco_settings->setInputValues([]);
-            foreach ($exco_settings->getTypeDef()->getFormValues($form) as $field_name => $field_value) {
-                $exco_settings->setInputValue($field_name, $field_value);
+        } else {
+            $settings = new ilExternalContentSettings($properties['settings_id']);
+            $settings->setInputValues([]);
+            foreach ($settings->getTypeDef()->getFormValues($form) as $field_name => $field_value) {
+                $settings->setInputValue($field_name, $field_value);
             }
-            $exco_settings->save();
+            $settings->save();
 
             return $this->updateElement($properties);
         }
-	}
-
-
-	/**
-	 * Cancel
-	 */
-	public function cancel()
-	{
-		$this->returnToParent();
-	}
-
-    /**
-     * setup css-style string for 'response'-iframe display
-     */
-    protected function getIFrameStyle() {
-        return "<style type='text/css'>
-                        .embed-container {
-                        position: relative; 
-                        padding-bottom: 56.25%; /* ratio 16x9 */
-                        height: 0; 
-                        overflow: hidden; 
-                        width: 60%;
-                        height: auto;
-                        }
-                        .embed-container iframe {
-                        position: absolute; 
-                        top: 0; 
-                        left: 0; 
-                        width: 100%; 
-                        height: 100%;
-                        }
-                     </style>";
     }
 
-	/**
-	 * Get HTML for element
-	 *
-	 * @param string    page mode (edit, presentation, print, preview, offline)
-	 * @return string   html code
-	 */
-	public function getElementHTML($a_mode, array $a_properties, $a_plugin_version)
-	{
-	    $html = '';
+    /**
+     * Cancel the editing
+     */
+    public function cancel(): void
+    {
+        $this->returnToParent();
+    }
 
-		if(!empty($a_properties['title'])) {
-		    // todo: use accesible style
-			$html .= "<h3>".$a_properties['title'] ."</h3>";
-		}
+    /**
+     * Get the HTML code of the page content
+     *
+     * @param string  $a_mode  page mode (edit, presentation, print, preview, offline)
+     */
+    public function getElementHTML(
+        string $a_mode,
+        array $a_properties,
+        string $plugin_version
+    ): string {
+        $html = '';
 
-		if (!empty($a_properties['settings_id'])) {
+        if (!empty($a_properties['title'])) {
+            $html .= "<h3>" . $a_properties['title'] . "</h3>";
+        }
+
+        if (!empty($a_properties['settings_id'])) {
             $content = new ilPCExternalContent($this->plugin, $a_properties['settings_id']);
             $renderer = new ilExternalContentRenderer($content);
             $settings = $content->getSettings();
 
-            switch ($settings->getTypeDef()->getLaunchType())
-            {
+            switch ($settings->getTypeDef()->getLaunchType()) {
                 case ilExternalContentType::LAUNCH_TYPE_LINK:
-                    $html .= '<p><a href="' . $renderer->render() . '">' .  $this->plugin->txt('launch_content') . '</a></p>';
+                    $html .= '<p><a href="' . $renderer->render() . '">' . $this->plugin->txt('launch_content') . '</a></p>';
                     break;
 
                 case ilExternalContentType::LAUNCH_TYPE_PAGE:
-                    $this->ctrl->setParameterByClass('ilPCExternalContentGUI', 'settings_id', $settings->getSettingsId());
-                    $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentGUI'], 'viewPage');
+                    $this->ctrl->saveParameterByClass('ilPCExternalContentPluginGUI', 'ref_id');
+                    $this->ctrl->setParameterByClass('ilPCExternalContentPluginGUI', 'settings_id', $settings->getSettingsId());
+                    $url = $this->ctrl->getLinkTargetByClass(['ilUIPluginRouterGUI', 'ilPCExternalContentPluginGUI'], 'viewPage');
 
-                    $html .= '<p><a href="' . $url . ' target="_blank">' .  $this->plugin->txt('launch_content') . '</a></p>';
+                    $html .= '<p><a href="' . $url . '">' . $this->plugin->txt('launch_content') . '</a></p>';
                     break;
 
                 case ilExternalContentType::LAUNCH_TYPE_EMBED:
@@ -323,18 +267,33 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
                     $html .= $renderer->render();
                     break;
             }
+        } elseif (!empty($a_properties['error'])) {
+            // fallback if import failed with an error message
+            $html .= '<p>' . $a_properties['error'] . '</p>';
         }
-		elseif (!empty($a_properties['error'])) {
-		    // fallback if import failed with an error message
-		    $html .= '<p>' . $a_properties['error'] . '</p>';
+
+        if (!empty($a_properties['description'])) {
+            // style taken from media object
+            $html .= '<figcaption><strong>' . $a_properties['description'] . "</strong></figcaption>";
         }
 
-		if(!empty($a_properties['description'])) {
-		    // style taken from media object
-        	$html .= '<figcaption><strong>'.$a_properties['description']."</strong></figcaption>";
-		}
+        return $html;
+    }
 
-		return $html;
-	}
+    /**
+     * View the external content page (called for LAUNCH_TYPE_PAGE)
+     */
+    public function viewPage(): void
+    {
+        $settings_id = $this->http->wrapper()->query()->retrieve('settings_id', $this->refinery->kindlyTo()->int());
+        $content = new ilPCExternalContent(ilPCExternalContentPlugin::getInstance(), $settings_id);
+        $renderer = new ilExternalContentRenderer($content);
+        $renderer->render();
 
+        $this->http->saveResponse($this->http->response()->withBody(
+            Streams::ofString($renderer->render())
+        ));
+        $this->http->sendResponse();
+        $this->http->close();
+    }
 }
