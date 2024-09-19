@@ -12,8 +12,7 @@
  */
 class ilPCExternalContentPlugin extends ilPageComponentPlugin
 {
-    /** @var self */
-    protected static $instance;
+    protected static self $instance;
 
     /**
      * Check if parent type is valid
@@ -46,13 +45,16 @@ class ilPCExternalContentPlugin extends ilPageComponentPlugin
      * Get the plugin instance
      * @return self
      */
-    public static function getInstance()
+    public static function getInstance(): self
     {
         global $DIC;
         if (!isset(self::$instance)) {
             /** @var ilComponentFactory $factory */
             $factory = $DIC["component.factory"];
-            self::$instance = $factory->getPlugin('pcxxco');
+
+            /** @var self  $instance */
+            $instance = $factory->getPlugin('pcxxco');
+            self::$instance = $instance;
         }
         return self::$instance;
     }
