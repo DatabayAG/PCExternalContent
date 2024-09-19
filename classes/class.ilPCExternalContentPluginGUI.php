@@ -240,7 +240,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
     ): string {
         $html = '';
 
-        if(!empty($a_properties['title'])) {
+        if (!empty($a_properties['title'])) {
             $html .= "<h3>" . $a_properties['title'] . "</h3>";
         }
 
