@@ -94,7 +94,7 @@ class ilPCExternalContent implements ilExternalContent
                     if (in_array($row['type'], array('cat', 'root')) && !empty($this->context)) {
                         break;
                     }
-                    $this->context['id'] = $row['child'];
+                    $this->context['id'] = (int) $row['child'];
                     $this->context['title'] = $row['title'];
                     $this->context['type'] = $row['type'];
                 }
