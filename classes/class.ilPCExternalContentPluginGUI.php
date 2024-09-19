@@ -272,7 +272,7 @@ class ilPCExternalContentPluginGUI extends ilPageComponentPluginGUI
             $html .= '<p>' . $a_properties['error'] . '</p>';
         }
 
-        if(!empty($a_properties['description'])) {
+        if (!empty($a_properties['description'])) {
             // style taken from media object
             $html .= '<figcaption><strong>' . $a_properties['description'] . "</strong></figcaption>";
         }
